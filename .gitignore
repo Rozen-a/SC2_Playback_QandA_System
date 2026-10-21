@@ -1,0 +1,13 @@
+# Python 虚拟环境和缓存
+.venv/
+__pycache__/
+*.py[cod]
+
+# 编辑器本机配置
+.idea/
+.vscode/
+
+# 本地密钥配置
+.env
+.env.*
+!.env.example
