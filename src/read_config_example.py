@@ -8,7 +8,7 @@ from pathlib import Path
 # .resolve()	将路径解析为绝对路径，并解析符号链接
 project_root = Path(__file__).resolve().parent.parent
 # 拼接文件路径
-config_path = project_root / "configs" / "example.json"
+config_path = project_root / "configs" / "configs.json"
 
 # 读取文件，并将 JSON 内容转换成 Python 字典
 with config_path.open("r", encoding="utf-8") as file:
