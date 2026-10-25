@@ -1,0 +1,7 @@
+﻿replay_id,game_loop,pid,player_name,minerals_current,vespene_current,workers_active_count,minerals_current_status,vespene_current_status,workers_active_count_status,tracker_index,duplicate_count,source_file,source_sha256
+A,1,1,Lambo,50,0,12,raw_matches_parser,raw_matches_parser,raw_matches_parser,235,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
+A,1,2,MaxPax,50,0,12,raw_matches_parser,raw_matches_parser,raw_matches_parser,236,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
+A,160,1,Lambo,35,0,12,raw_matches_parser,raw_matches_parser,raw_matches_parser,238,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
+A,160,2,MaxPax,40,0,12,raw_matches_parser,raw_matches_parser,raw_matches_parser,239,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
+A,320,1,Lambo,40,0,13,raw_matches_parser,raw_matches_parser,raw_matches_parser,246,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
+A,320,2,MaxPax,15,0,13,raw_matches_parser,raw_matches_parser,raw_matches_parser,247,1,2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay,30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19
