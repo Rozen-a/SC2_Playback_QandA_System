@@ -1,0 +1,36 @@
+{
+  "created_at_utc": "2026-10-26T10:04:04.841591+00:00",
+  "config": {
+    "model_id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "model_path": "../model_assets/Qwen3-1.7B",
+    "device": "cuda",
+    "dtype": "float16",
+    "enable_thinking": false,
+    "max_new_tokens": 128,
+    "do_sample": true,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42
+  },
+  "resolved_model_path": "D:\\rozen_file\\SHU\\1004\\SC2_Playback_QandA_System\\model_assets\\Qwen3-1.7B",
+  "torch_version": "2.10.0+cu128",
+  "transformers_version": "5.20.2",
+  "cuda_version": "12.8",
+  "gpu_name": "NVIDIA GeForce RTX 3080 Laptop GPU",
+  "model_load_seconds": 5.288,
+  "messages": [
+    {
+      "role": "user",
+      "content": "请用一句简短的中文介绍你自己。"
+    }
+  ],
+  "rendered_prompt": "<|im_start|>user\n请用一句简短的中文介绍你自己。<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+  "answer": "我是您的AI助手，可以帮您回答问题、提供信息和进行交流。",
+  "input_tokens": 22,
+  "generated_tokens": 18,
+  "stopped_on_eos": true,
+  "generation_seconds": 0.987
+}

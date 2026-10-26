@@ -6,7 +6,7 @@
 
 本项目围绕 SC2 游戏回放开展数据解析与整理，为后续回放问答和模型效果对比提供数据基础。项目按照任务书分阶段实现，并保存各阶段的代码、运行结果和核对记录。
 
-当前已完成 T00 环境与配置读取，以及 T01 回放解析与统计导出。现有程序以命令行脚本运行；回放问答、模型训练与对比功能尚未实现。
+当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理。现有程序以命令行脚本运行；模型服务、回放问答、模型训练与对比功能尚未实现。
 
 ### 当前功能
 
@@ -15,6 +15,7 @@
 - 检查双方共同采样点、重复记录和数据冲突。
 - 核对矿、气、活跃工人数的原始统计值与解析值，区分缺失、异常与解析差异。
 - 导出六条样本记录、比赛信息、完整统计核对材料和 Markdown 检查报告。
+- 在 GPU 上加载本地 Qwen3-1.7B，使用模型对话模板生成短回答并记录运行结果。
 
 当前验证对象为回放 A（Lambo 对阵 MaxPax，游戏版本 `5.0.15.95299`）。时间字段保留为 `game_loop`，字段定义与处理规则见 [字段说明](docs/fields.md)。
 
@@ -23,7 +24,8 @@
 ```text
 SC2_Playback_QandA_System/
 ├── configs/
-│   └── example.json              # 配置读取示例
+│   ├── example.json              # 配置读取示例
+│   └── model.json                # 模型版本、位置和生成设置
 ├── data/
 │   ├── raw/                      # 原始 .SC2Replay 文件
 │   ├── decoded/
@@ -36,12 +38,14 @@ SC2_Playback_QandA_System/
 │   └── fields.md                 # 字段定义及异常处理规则
 ├── results/
 │   ├── T00/                      # 环境练习与排错记录
-│   └── T01/                      # 检查报告、人工复核与运行记录
+│   ├── T01/                      # 检查报告、人工复核与运行记录
+│   └── T02/                      # 模型实际推理记录
 ├── src/
 │   ├── read_config_example.py    # 配置读取入口
 │   ├── parse_replay.py           # 回放解析与数据导出入口
 │   ├── stats_validation.py       # 统计字段检查
-│   └── report_generator.py       # Markdown 报告生成
+│   ├── report_generator.py       # Markdown 报告生成
+│   └── model_inference.py        # 本地模型加载与直接推理入口
 ├── tests/
 │   ├── test_stats_validation.py  # 字段边界情况测试
 │   └── test_export_records.py    # 导出记录对应关系测试
@@ -54,7 +58,7 @@ SC2_Playback_QandA_System/
 
 ## 安装与运行
 
-以下命令适用于 Windows PowerShell。项目当前使用 Python `3.12.10`，依赖固定为 `sc2reader==1.9.0`。现阶段的配置读取与回放解析无需 GPU，也无需启动 SC2 游戏客户端。
+以下命令适用于 Windows PowerShell。项目当前使用 Python `3.12.10`，回放解析依赖 `sc2reader==1.9.0`；已安装的模型阶段依赖见 `requirements.txt`。现阶段的配置读取与回放解析无需 GPU，也无需启动 SC2 游戏客户端。
 
 ### 1. 获取项目
 
@@ -68,11 +72,15 @@ Set-Location .\SC2_Playback_QandA_System
 ### 2. 创建环境并安装依赖
 
 ```powershell
-python -m venv .venv
+python -m venv --system-site-packages .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 已有 `.venv` 时跳过创建步骤。命令直接使用虚拟环境解释器，无需先激活环境。
+
+本项目当前继承基础 Python 的软件包：`transformers==5.20.2` 和现有 GPU 版 PyTorch 安装在基础 Python 中，`fastapi==0.162.0`、`uvicorn==0.54.0` 安装在 `.venv` 中。`requirements.txt` 记录直接依赖版本，不区分安装位置；需要保留该分工时，应先在基础 Python 中安装 Transformers，再在虚拟环境中安装依赖清单。
+
+模型推理实际验证环境为 `torch==2.10.0+cu128`，对应 CUDA 12.8。依赖清单中的 `torch==2.10.0` 同样接受该版本，但不单独保证 CUDA 构建。新电脑需先安装匹配其显卡驱动的 GPU 版 PyTorch，并确认 `torch.cuda.is_available()` 为 `True`。
 
 ### 3. 检查回放文件
 
@@ -109,6 +117,8 @@ data/raw/2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay
 | [人工复核记录](results/T01/manual_review.md) | 独立保存的人工核对结果，程序不会覆盖 |
 
 重新运行会更新程序生成的数据与报告。人工复核结果只对应其记录的回放 SHA-256；更换原始回放后应重新核对。
+
+本地模型直接推理的准备与命令见下方 T02 实施记录。
 
 ### 5. 运行测试
 
@@ -186,6 +196,26 @@ python -m venv .venv
 ```
 
 本阶段不需要新增第三方依赖。人工复核结果保存在 `results/T01/manual_review.md`。
+
+### T02 本地模型直接推理（进行中）
+
+模型：`Qwen/Qwen3-1.7B`，模型与分词器固定版本均为 `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`。获取方式为 Hugging Face 官方模型仓库，下载时通过 `snapshot_download` 的 `revision` 参数固定上述提交。模型权重保存在仓库之外，默认位置为仓库同级的 `model_assets/Qwen3-1.7B/`。
+
+运行前，下载该固定版本的模型权重、配置、分词器及对话模板文件；检查 [模型配置](configs/model.json) 中的 `model_path`。相对路径以仓库根目录为基准，换电脑时可调整，也可填写绝对路径。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model_inference.py
+```
+
+程序只读取本地文件，使用 CUDA、FP16 和官方对话模板，关闭思考模式；非思考模式的采样参数依据下载模型中的 README。`max_new_tokens` 限制新增 token 数量，不是汉字数。默认回答和设置保存在 [直接推理记录](results/T02/direct_inference.json)，其中分别记录模型加载耗时与生成耗时。重复执行会覆盖该记录。
+
+可修改问题、回答长度和记录位置，例如：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model_inference.py --prompt "请用一句简短的中文介绍你自己。" --max-new-tokens 64 --output results/T02/direct_inference_64.json
+```
+
+此处已验证一次模型直接生成，尚未完成 FastAPI 服务、独立客户端、长度调整比较及异常与重启检查，T02 整体仍在进行中。
 
 
 
