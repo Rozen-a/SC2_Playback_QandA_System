@@ -134,5 +134,5 @@
   "field_status_counts_all_events": {
     "raw_matches_parser": 537
   },
-  "note": "共同点已排除冲突；每字段仍须检查状态。自动一致性检查不代替人工复核。"
+  "note": "共同点已排除冲突；每字段仍须检查状态。人工复核结果另见 results/T01/manual_review.md。"
 }

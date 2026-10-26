@@ -55,4 +55,4 @@ Tracker 事件总数： 2634
 已导出： data\processed\A_info.json
 已导出： data\decoded\A_tracker_stats.json
 已导出： results\T01\data_check.md
-下一步：按 data_check.md 的步骤人工复核六条记录。
+人工复核记录：results/T01/manual_review.md（本次运行不会覆盖）。

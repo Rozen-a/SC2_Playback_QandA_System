@@ -12,7 +12,7 @@ def write_t01_report(
     stats_event_count: int,
     output_dir: Path,
 ) -> Path:
-    """生成自动检查报告，并返回文件路径。
+    """生成数据检查报告，并返回文件路径。
 
     info 是比赛与质量检查摘要，sample_rows 是带字段状态的样本记录。
     调用方负责提前完成校验；本函数只组织文字和表格，不修改输入数据。
@@ -30,8 +30,8 @@ def write_t01_report(
 
     # 先组织报告内容；无效字段显示“空”，不将其替换为零。
     report = [
-        f"# 回放 {replay_id} 的 T01 自动检查记录", "",
-        "本文件由解析程序生成。已执行自动字段一致性检查，尚未完成独立人工复核。", "",
+        f"# 回放 {replay_id} 的 T01 数据检查记录", "",
+        "本文件汇总解析与字段一致性检查结果。人工复核记录见同目录 manual_review.md。", "",
         f"- 文件：{source_file}",
         f"- SHA-256：{replay_sha256}",
         f"- 游戏版本：{game_version}；解析器版本：{parser_version}",
@@ -50,21 +50,13 @@ def write_t01_report(
             f"| {row['game_loop']} | {row['pid']} | {row['player_name']} | "
             + " | ".join(values) + f" | {row['tracker_index']} | {statuses} |"
         )
-    # 追加重复事件摘要、人工复核步骤及当前回放的文件替换说明。
+    # 人工复核记录单独保存，重新生成报告时不覆盖，也不预设复核状态。
     report += [
         "", "## 重复记录", "",
         *[f"- 玩家 {item['pid']}，时间编号 {item['game_loop']}，事件序号 {item['tracker_indices']}，冲突：{item['conflict']}。"
           for item in info["duplicate_groups"]],
-        "", "## 人工复核步骤", "",
-        f"1. 打开 data/decoded/{replay_id}_tracker_stats.json，按表中 tracker_index 找到六条事件。",
-        "2. 检查 pid、game_loop 和玩家对应关系。",
-        '3. JSON 中 raw_stats 的键为字符串；逐项查看 "0"、"1"、"4" 对应的值，与 CSV 的矿、气、活跃工人数比较。',
-        "4. 查看 field_checks：缺失、负数或改写值不能作为已确认真实值。",
-        "5. 在独立的 manual_review.md 中记录复核人、实际日期、逐条结果及问题；不要修改本自动报告伪称已人工通过。",
-        "", "## 文件替换情况", "",
-        "用户已说明先前文件错误，后用新文件替换且文件名未变。",
-        "聊天中早先记录的校验值：63BA4A0FA2C8B7DAB7630283C290973D32515DB7027C2C871A221E52CE42A2F7。",
-        f"本次实际读取的校验值：{replay_sha256}。实际替换日期尚待用户补充，不能从文件时间推断。",
+        "", "## 人工复核记录", "",
+        "核对方法、逐条结果与复核状态见 [manual_review.md](manual_review.md)。",
         "", "共同采样点数量不代表每个字段均可用；程序运行成功不代表兼容所有回放。", "",
     ]
     # 用换行符连接各行，以 UTF-8 写入；返回路径供调用方显示。

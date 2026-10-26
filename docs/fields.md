@@ -45,6 +45,6 @@ sc2reader 1.9.0 对三项目标字段调用 clamp，将负数限制为 0；因�
 - data/processed/A_stats_sample.csv：两个玩家、三个采样点，共六条记录。
 - data/processed/A_info.json：比赛信息、玩家映射、共同点和重复冲突摘要。
 - data/decoded/A_tracker_stats.json：全部玩家统计事件的原始统计字典、解析字段与检查状态。这里“原始”指已解码但尚未 clamp 的统计字典，不是原始回放字节。
-- results/T01/data_check.md：可重复生成的自动检查报告，不能作为人工复核签字记录。
+- results/T01/data_check.md：可重复生成的数据检查报告；人工复核结果另存 manual_review.md。
 
 用 CSV 中的 tracker_index 定位 JSON 事件，逐项比较玩家、时间和 raw_stats 的 "0"、"1"、"4" 键对应值；人工结果另存 results/T01/manual_review.md。

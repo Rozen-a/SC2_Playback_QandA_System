@@ -149,7 +149,7 @@ if len(matches) != 1:
     raise ValueError("来源清单中必须有且只有一条对应当前文件名的记录。")
 manifest_record = matches[0]
 if manifest_record["sha256"].upper() != replay_sha256:
-    raise ValueError("当前回放校验值与来源清单不同，请先核实文件替换记录。")
+    raise ValueError("当前回放 SHA-256 与 data/manifest.csv 不匹配，请核实文件及来源清单。")
 if manifest_record["parser_version"] != version("sc2reader"):
     raise ValueError("来源清单中的解析器版本与当前环境不同，请先核实。")
 if manifest_record["game_version"] != replay.release_string:
@@ -221,7 +221,7 @@ results_dir = project_root / "results/T01"
 for directory in (processed_dir, decoded_dir, results_dir):
     directory.mkdir(parents=True, exist_ok=True)
 
-# 导出原始统计字典、样本 CSV、信息 JSON 和自动检查报告
+# 导出原始统计字典、样本 CSV、信息 JSON 和数据检查报告
 source = {
     "replay_id": replay_id,
     "source_file": replay_path.name,
@@ -251,7 +251,7 @@ info = {
         for key, records in grouped_events.items() if len(records) > 1
     ],
     "field_status_counts_all_events": dict(quality_counts),
-    "note": "共同点已排除冲突；每字段仍须检查状态。自动一致性检查不代替人工复核。",
+    "note": "共同点已排除冲突；每字段仍须检查状态。人工复核结果另见 results/T01/manual_review.md。",
 }
 
 sample_path = processed_dir / f"{replay_id}_stats_sample.csv"
@@ -281,4 +281,4 @@ report_path = write_t01_report(
 print("全部统计事件的字段检查计数：", dict(quality_counts))
 for path in (sample_path, info_path, raw_path, report_path):
     print("已导出：", path.relative_to(project_root))
-print("下一步：按 data_check.md 的步骤人工复核六条记录。")
+print("人工复核记录：results/T01/manual_review.md（本次运行不会覆盖）。")
