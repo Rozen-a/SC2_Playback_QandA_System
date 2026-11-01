@@ -1,0 +1,16 @@
+{
+  "created_at_utc": "2026-11-01T18:15:55.895806+00:00",
+  "service_url": "http://127.0.0.1:11103",
+  "timeout_seconds": 30,
+  "request": {
+    "prompt": "请用一句简短的中文介绍你自己。",
+    "max_new_tokens": 128
+  },
+  "success": false,
+  "error": {
+    "kind": "connection_error",
+    "message": "无法连接模型服务，请确认服务已启动、加载完成且地址端口正确。",
+    "http_status": null,
+    "detail": null
+  }
+}

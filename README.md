@@ -6,7 +6,7 @@
 
 本项目围绕 SC2 游戏回放开展数据解析与整理，为后续回放问答和模型效果对比提供数据基础。项目按照任务书分阶段实现，并保存各阶段的代码、运行结果和核对记录。
 
-当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理和模型服务。现有入口包括命令行脚本与本机 HTTP 服务；独立模型客户端、回放问答、模型训练与对比功能尚未实现。
+当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理、模型服务和独立客户端。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
 ### 当前功能
 
@@ -17,6 +17,7 @@
 - 导出六条样本记录、比赛信息、完整统计核对材料和 Markdown 检查报告。
 - 在 GPU 上加载本地 Qwen3-1.7B，使用模型对话模板生成短回答并记录运行结果。
 - 启动本机模型服务，查看模型状态，通过 HTTP 请求取得真实生成结果。
+- 从独立 Python 客户端调用模型服务，展示回答、耗时并记录调用结果。
 
 当前验证对象为回放 A（Lambo 对阵 MaxPax，游戏版本 `5.0.15.95299`）。时间字段保留为 `game_loop`，字段定义与处理规则见 [字段说明](docs/fields.md)。
 
@@ -47,7 +48,8 @@ SC2_Playback_QandA_System/
 │   ├── stats_validation.py       # 统计字段检查
 │   ├── report_generator.py       # Markdown 报告生成
 │   ├── model_inference.py        # 本地模型加载与直接推理入口
-│   └── model_service.py          # 本机 HTTP 模型服务入口
+│   ├── model_service.py          # 本机 HTTP 模型服务入口
+│   └── model_client.py           # 独立 HTTP 调用入口
 ├── tests/
 │   ├── test_stats_validation.py  # 字段边界情况测试
 │   └── test_export_records.py    # 导出记录对应关系测试
@@ -245,7 +247,29 @@ python -m venv .venv
 
 本阶段的实际启动与请求记录见 [服务验收记录](results/T02/service_smoke.json)，加载日志见 [服务运行日志](results/T02/model_service.log)。验收记录包含两次真实生成、一次错误长度检查，以及请求前后的模型状态。
 
-T02 尚待完成独立客户端、长度调整比较，以及连接失败、超时和服务重启后的检查。
+#### 运行独立客户端
+
+先按上一节启动服务，等待模型加载完成；保持服务终端打开，在另一个终端运行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model_client.py
+```
+
+也可以在 PyCharm 或 VS Code 中直接运行 `model_client.py`，解释器选择项目 `.venv`。客户端只使用 `requests` 发送 HTTP 请求，GPU 推理由服务进程完成。
+
+客户端读取 `configs/model.json` 中的地址、端口、默认回答长度和 `service.timeout_seconds`。默认连接与读取等待超时为 30 秒，可通过参数调整：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model_client.py --prompt "请用一句话解释什么是人工智能。" --max-new-tokens 64 --timeout 30
+```
+
+程序打印回答、新增 token 数、服务端生成耗时和客户端 HTTP 请求耗时。HTTP 请求耗时包含通信及服务端处理，不能当作纯 GPU 生成耗时；超时设置也不是整个请求的总耗时上限。客户端超时不会取消服务端已开始的生成，请勿立即连续重试。
+
+默认调用记录保存到 [客户端推理记录](results/T02/client_inference.json)，重复运行会覆盖。成功时 `success` 为 `true`、退出码为 0；连接失败、超时、HTTP 错误或返回格式异常时保存错误类别与详情，退出码为 1。可通过 `--output` 指定其他记录路径。
+
+已使用独立客户端取得真实模型回答，并验证指定本机端口未启动服务时会明确报错，见 [连接失败记录](results/T02/client_unavailable.json)。该失败检查使用单独的未监听端口，未中断已运行的模型服务。
+
+T02 尚待完成长度调整比较、超时与服务错误处理的实际调用检查，以及服务重启后的检查。
 
 
 

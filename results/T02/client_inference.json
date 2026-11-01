@@ -1,0 +1,31 @@
+{
+  "created_at_utc": "2026-11-01T18:39:02.801090+00:00",
+  "service_url": "http://127.0.0.1:8000",
+  "timeout_seconds": 30,
+  "request": {
+    "prompt": "请用一句简短的中文介绍你自己。",
+    "max_new_tokens": 128
+  },
+  "success": true,
+  "http_status": 200,
+  "request_seconds": 1.353,
+  "response": {
+    "model_id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "device": "cuda:0",
+    "enable_thinking": false,
+    "max_new_tokens": 128,
+    "messages": [
+      {
+        "role": "user",
+        "content": "请用一句简短的中文介绍你自己。"
+      }
+    ],
+    "rendered_prompt": "<|im_start|>user\n请用一句简短的中文介绍你自己。<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "answer": "我是您的AI助手，可以帮您回答问题、提供信息和进行交流。",
+    "input_tokens": 22,
+    "generated_tokens": 18,
+    "stopped_on_eos": true,
+    "generation_seconds": 1.291
+  }
+}
