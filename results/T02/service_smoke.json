@@ -1,0 +1,122 @@
+{
+  "created_at_utc": "2026-10-26T10:17:40.113996+00:00",
+  "start_command": ".\\.venv\\Scripts\\python.exe -X utf8 .\\src\\model_service.py",
+  "base_url": "http://127.0.0.1:8000",
+  "config": {
+    "model_id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "model_path": "../model_assets/Qwen3-1.7B",
+    "device": "cuda",
+    "dtype": "float16",
+    "enable_thinking": false,
+    "max_new_tokens": 128,
+    "do_sample": true,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "service": {
+      "host": "127.0.0.1",
+      "port": 8000
+    }
+  },
+  "health_before": {
+    "status": "ready",
+    "model_id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "device": "cuda:0",
+    "dtype": "torch.float16",
+    "gpu_name": "NVIDIA GeForce RTX 3080 Laptop GPU",
+    "model_load_seconds": 4.878,
+    "process_id": 32972
+  },
+  "requests": [
+    {
+      "request": {
+        "prompt": "请用一句简短的中文介绍你自己。"
+      },
+      "http_status": 200,
+      "response": {
+        "model_id": "Qwen/Qwen3-1.7B",
+        "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "device": "cuda:0",
+        "enable_thinking": false,
+        "max_new_tokens": 128,
+        "messages": [
+          {
+            "role": "user",
+            "content": "请用一句简短的中文介绍你自己。"
+          }
+        ],
+        "rendered_prompt": "<|im_start|>user\n请用一句简短的中文介绍你自己。<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+        "answer": "我是您的AI助手，可以帮您回答问题、提供信息和进行交流。",
+        "input_tokens": 22,
+        "generated_tokens": 18,
+        "stopped_on_eos": true,
+        "generation_seconds": 0.925
+      }
+    },
+    {
+      "request": {
+        "prompt": "请只回答一个词：天空通常是什么颜色？"
+      },
+      "http_status": 200,
+      "response": {
+        "model_id": "Qwen/Qwen3-1.7B",
+        "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "device": "cuda:0",
+        "enable_thinking": false,
+        "max_new_tokens": 128,
+        "messages": [
+          {
+            "role": "user",
+            "content": "请只回答一个词：天空通常是什么颜色？"
+          }
+        ],
+        "rendered_prompt": "<|im_start|>user\n请只回答一个词：天空通常是什么颜色？<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+        "answer": "蓝或青灰色",
+        "input_tokens": 23,
+        "generated_tokens": 5,
+        "stopped_on_eos": true,
+        "generation_seconds": 0.168
+      }
+    }
+  ],
+  "invalid_length_check": {
+    "request": {
+      "prompt": "test",
+      "max_new_tokens": 0
+    },
+    "http_status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "greater_than_equal",
+          "loc": [
+            "body",
+            "max_new_tokens"
+          ],
+          "msg": "Input should be greater than or equal to 1",
+          "input": 0,
+          "ctx": {
+            "ge": 1
+          }
+        }
+      ]
+    }
+  },
+  "health_after": {
+    "status": "ready",
+    "model_id": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "device": "cuda:0",
+    "dtype": "torch.float16",
+    "gpu_name": "NVIDIA GeForce RTX 3080 Laptop GPU",
+    "model_load_seconds": 4.878,
+    "process_id": 32972
+  },
+  "same_model_session": true,
+  "scope": "服务启动、两个真实生成请求与一次参数校验；客户端、长度比较、超时和重启检查尚未完成。",
+  "test_service_stopped": true
+}

@@ -1,0 +1,15 @@
+INFO:     Started server process [32972]
+INFO:     Waiting for application startup.
+INFO:     Loading model: Qwen/Qwen3-1.7B; revision: 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+加载本地模型：D:\rozen_file\SHU\1004\SC2_Playback_QandA_System\model_assets\Qwen3-1.7B
+W1026 18:17:34.501000 32972 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+INFO:     Model ready: {"status": "ready", "model_id": "Qwen/Qwen3-1.7B", "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e", "device": "cuda:0", "dtype": "torch.float16", "gpu_name": "NVIDIA GeForce RTX 3080 Laptop GPU", "model_load_seconds": 4.878, "process_id": 32972}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:8839 - "GET /health HTTP/1.1" 200 OK
+INFO:     Generated 18 tokens in 0.925 seconds
+INFO:     127.0.0.1:8840 - "POST /generate HTTP/1.1" 200 OK
+INFO:     Generated 5 tokens in 0.168 seconds
+INFO:     127.0.0.1:8842 - "POST /generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8847 - "POST /generate HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:8848 - "GET /health HTTP/1.1" 200 OK

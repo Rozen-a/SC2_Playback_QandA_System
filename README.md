@@ -6,7 +6,7 @@
 
 本项目围绕 SC2 游戏回放开展数据解析与整理，为后续回放问答和模型效果对比提供数据基础。项目按照任务书分阶段实现，并保存各阶段的代码、运行结果和核对记录。
 
-当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理。现有程序以命令行脚本运行；模型服务、回放问答、模型训练与对比功能尚未实现。
+当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理和模型服务。现有入口包括命令行脚本与本机 HTTP 服务；独立模型客户端、回放问答、模型训练与对比功能尚未实现。
 
 ### 当前功能
 
@@ -16,6 +16,7 @@
 - 核对矿、气、活跃工人数的原始统计值与解析值，区分缺失、异常与解析差异。
 - 导出六条样本记录、比赛信息、完整统计核对材料和 Markdown 检查报告。
 - 在 GPU 上加载本地 Qwen3-1.7B，使用模型对话模板生成短回答并记录运行结果。
+- 启动本机模型服务，查看模型状态，通过 HTTP 请求取得真实生成结果。
 
 当前验证对象为回放 A（Lambo 对阵 MaxPax，游戏版本 `5.0.15.95299`）。时间字段保留为 `game_loop`，字段定义与处理规则见 [字段说明](docs/fields.md)。
 
@@ -45,7 +46,8 @@ SC2_Playback_QandA_System/
 │   ├── parse_replay.py           # 回放解析与数据导出入口
 │   ├── stats_validation.py       # 统计字段检查
 │   ├── report_generator.py       # Markdown 报告生成
-│   └── model_inference.py        # 本地模型加载与直接推理入口
+│   ├── model_inference.py        # 本地模型加载与直接推理入口
+│   └── model_service.py          # 本机 HTTP 模型服务入口
 ├── tests/
 │   ├── test_stats_validation.py  # 字段边界情况测试
 │   └── test_export_records.py    # 导出记录对应关系测试
@@ -197,7 +199,7 @@ python -m venv .venv
 
 本阶段不需要新增第三方依赖。人工复核结果保存在 `results/T01/manual_review.md`。
 
-### T02 本地模型直接推理（进行中）
+### T02 模型推理与服务（进行中）
 
 模型：`Qwen/Qwen3-1.7B`，模型与分词器固定版本均为 `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`。获取方式为 Hugging Face 官方模型仓库，下载时通过 `snapshot_download` 的 `revision` 参数固定上述提交。模型权重保存在仓库之外，默认位置为仓库同级的 `model_assets/Qwen3-1.7B/`。
 
@@ -215,7 +217,35 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -X utf8 .\src\model_inference.py --prompt "请用一句简短的中文介绍你自己。" --max-new-tokens 64 --output results/T02/direct_inference_64.json
 ```
 
-此处已验证一次模型直接生成，尚未完成 FastAPI 服务、独立客户端、长度调整比较及异常与重启检查，T02 整体仍在进行中。
+#### 启动模型服务
+
+在仓库根目录执行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model_service.py
+```
+
+地址由 `configs/model.json` 的 `service` 项配置，默认仅监听 `127.0.0.1:8000`。服务启动时加载一次模型，日志显示 `Application startup complete` 后可以发送请求。服务运行期间保持该终端打开，结束时按 `Ctrl+C`。当前使用一个进程，不启用热重载。
+
+| 接口 | 用途 |
+| --- | --- |
+| `GET /health` | 返回模型版本、实际设备、精度、加载耗时和进程编号 |
+| `POST /generate` | 接收问题及可选长度参数，返回真实模型回答与生成信息 |
+
+启动后可在浏览器打开 `http://127.0.0.1:8000/docs`，展开 `POST /generate`，点击 **Try it out**，输入以下 JSON，再点击 **Execute**：
+
+```json
+{
+  "prompt": "请用一句简短的中文介绍你自己。",
+  "max_new_tokens": 128
+}
+```
+
+`prompt` 必须是非空白字符串，最多 4000 个字符；`max_new_tokens` 可省略，提供时必须是 1～512 的整数。每次请求复用已加载的模型，使用独立的配置副本；其余生成参数沿用模型配置。请求格式或参数错误返回 422，模型忙时返回 503，生成过程异常返回 500 并在服务端记录原因。多个请求不会同时执行模型生成。
+
+本阶段的实际启动与请求记录见 [服务验收记录](results/T02/service_smoke.json)，加载日志见 [服务运行日志](results/T02/model_service.log)。验收记录包含两次真实生成、一次错误长度检查，以及请求前后的模型状态。
+
+T02 尚待完成独立客户端、长度调整比较，以及连接失败、超时和服务重启后的检查。
 
 
 

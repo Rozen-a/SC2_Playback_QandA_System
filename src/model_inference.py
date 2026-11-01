@@ -1,6 +1,12 @@
-"""T02：从本地加载固定版本的模型，完成直接推理并保存实际运行记录。"""
+"""
+T02：从本地加载固定版本的模型，完成直接推理并保存实际运行记录。
 
-import argparse
+职责：
+- 加载模型
+- 生成回答
+"""
+
+import argparse  # 用于读取命令行参数
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -23,21 +29,24 @@ def load_local_model(config: dict):
         raise RuntimeError("当前配置需要可用的 CUDA 显卡，请检查 PyTorch 和驱动。")
     if config["dtype"] != "float16":
         raise ValueError("当前加载程序支持的 dtype 为 float16。")
-
+    
+    # 从本地加载 tokenizer 和模型；不使用自动分配设备的功能，避免额外依赖。 
     print(f"加载本地模型：{model_path}", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
     # 显式指定精度，再将权重放到显卡；无需自动分配设备所需的额外依赖。
     model = AutoModelForCausalLM.from_pretrained(
         model_path, dtype=torch.float16, local_files_only=True
     ).to(config["device"])
-    model.eval()
+    model.eval()  # 切换为评估模式，使模型中的相关层按推理时的方式工作
     return tokenizer, model
 
 
 def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
     """沿用模型提供的对话模板，返回实际生成文本、长度及耗时。"""
-    if not prompt.strip():
+    # strip() 去掉字符串首尾的空白字符后判断是否为空
+    if not prompt.strip(): 
         raise ValueError("问题不能为空。")
+    # 限制新增输出 token 的数量，避免生成过长的回答
     if type(config["max_new_tokens"]) is not int or not 1 <= config["max_new_tokens"] <= 512:
         raise ValueError("max_new_tokens 必须为 1～512 之间的整数。")
 
@@ -50,12 +59,17 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
         add_generation_prompt=True,
         enable_thinking=config["enable_thinking"],
     )
-    inputs = tokenizer(rendered_prompt, return_tensors="pt", add_special_tokens=False)
+    inputs = tokenizer(
+        rendered_prompt, 
+        return_tensors="pt",  # 返回 PyTorch 张量
+        add_special_tokens=False
+        )
     inputs = inputs.to(model.device)
-    input_tokens = inputs["input_ids"].shape[1]
+    # 计算输入的 token 数量
+    input_tokens = inputs["input_ids"].shape[1]  # [输入条数, 每条输入的 token 数]
 
     # CUDA 异步执行；前后同步后再计时，记录本次生成所耗时间。
-    torch.cuda.synchronize()
+    torch.cuda.synchronize()  # 确保前面的操作完成后再开始计时
     started = time.perf_counter()
     with torch.inference_mode():
         output = model.generate(
@@ -67,12 +81,14 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
             top_k=config["top_k"],
             min_p=config["min_p"],
         )
-    torch.cuda.synchronize()
+    torch.cuda.synchronize()  # 确保生成完成后再计时
     elapsed = time.perf_counter() - started
 
     # generate 返回“输入＋新增内容”，只解码新增部分，避免把问题当成回答。
     new_ids = output[0, input_tokens:]
+    # EOS 表示序列结束标记
     eos_ids = model.generation_config.eos_token_id
+    # 生成结果中可能包含多个 EOS token，统一转换为列表，便于后续判断。
     eos_ids = eos_ids if isinstance(eos_ids, list) else [eos_ids]
     return {
         "messages": messages,
