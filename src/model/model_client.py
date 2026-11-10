@@ -1,6 +1,6 @@
 """T02：通过 HTTP 调用本地模型服务，显示结果并保存调用记录。
 
-职责：读取调用配置、发送问题、处理通信错误；模型加载与生成由服务端负责。
+读取调用配置、发送问题、处理通信错误并记录客户端观测到的结果。
 """
 
 import argparse
@@ -14,14 +14,21 @@ import time
 import requests
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class ModelClientError(RuntimeError):
     """携带错误类别、HTTP 状态和服务端详情，供调用方显示与记录。"""
 
     def __init__(self, kind: str, message: str, *, status_code=None, detail=None):
-        """保留可读提示及结构化信息，不将调用失败包装成模型回答。"""
+        """保存可供终端显示和写入 JSON 的错误信息。
+
+        Args:
+            - kind (str): 错误类别，例如 timeout 或 http_error。
+            - message (str): 面向调用者的错误提示。
+            - status_code (int | None): HTTP 状态码，未取得响应时为 None。
+            - detail (object | None): 服务端返回的错误详情，可省略。
+        """
         super().__init__(message)
         self.kind = kind
         self.status_code = status_code
@@ -29,7 +36,17 @@ class ModelClientError(RuntimeError):
 
 
 def request_answer(service_url: str, payload: dict, timeout_seconds: float) -> dict:
-    """发送一次生成请求；成功返回响应与请求耗时，失败抛出 ModelClientError。"""
+    """发送一次生成请求并校验响应，失败时抛出 ModelClientError。
+
+    Args:
+        - service_url (str): 模型服务的基础地址，例如 http://127.0.0.1:8000。
+        - payload (dict): 请求体，包含 prompt 和可选的 max_new_tokens。
+        - timeout_seconds (float): 连接和读取等待时间，以秒为单位，要求为有限正数。
+
+    Returns:
+        - result (dict): 包含 HTTP 状态码 http_status、请求耗时 request_seconds（秒）
+          及服务端的响应数据 response。
+    """
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
         raise ModelClientError("invalid_timeout", "超时设置必须是大于 0 的有限秒数。")
 
@@ -90,7 +107,11 @@ def request_answer(service_url: str, payload: dict, timeout_seconds: float) -> d
 
 
 def main() -> int:
-    """提供独立命令行入口；成功返回 0，调用失败记录原因并返回 1。"""
+    """解析命令行参数，调用模型服务并记录结果。
+
+    Returns:
+        - exit_code (int): 调用成功为 0，捕获并记录 ModelClientError 时为 1。
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/model.json", help="相对于仓库根目录的配置路径")
     parser.add_argument("--prompt", default="请用一句简短的中文介绍你自己。", help="发送给模型的问题")

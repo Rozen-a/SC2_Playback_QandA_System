@@ -1,7 +1,7 @@
 """检查三项目标字段，避免把缺失、异常或解析器改写值当作真实值。"""
 
 
-# 定义原始统计字典中各字段的位置
+# 原始统计字典的整数键对应矿量、气量和活跃工人数。
 STAT_FIELDS = {
     "minerals_current": 0, # 矿
     "vespene_current": 1, # 气
@@ -10,10 +10,16 @@ STAT_FIELDS = {
 
 
 def check_stat(raw_value, parsed_value):
-    """
-    比较原始值和 sc2reader 处理后的值
-    返回原始值、解析值、可用值和检查状态；
-    不可用值保留为 None
+    """比较原始统计值与 sc2reader 解析值，判断该字段能否导出。
+
+    Args:
+        - raw_value (object): 原始统计值，缺失时为 None。
+        - parsed_value (object): 解析器处理后的对应字段值。
+
+    Returns:
+        - result (dict): 包含原始值 raw、解析值 parsed、可用值 value、
+          检查状态 status 和原始值与解析值是否不同的 parser_changed。
+          只有两值一致且原始值为非负整数时，value 才保留原始值。
     """
     if raw_value is None: # 原始值缺失
         status = "missing"

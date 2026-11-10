@@ -6,7 +6,7 @@
 
 本项目围绕 SC2 游戏回放开展数据解析与整理，为后续回放问答和模型效果对比提供数据基础。项目按照任务书分阶段实现，并保存各阶段的代码、运行结果和核对记录。
 
-当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 的本地模型直接推理、模型服务和独立客户端。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
+当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
 ### 当前功能
 
@@ -43,22 +43,31 @@ SC2_Playback_QandA_System/
 │   ├── T01/                      # 检查报告、人工复核与运行记录
 │   └── T02/                      # 模型实际推理记录
 ├── src/
-│   ├── read_config_example.py    # 配置读取入口
-│   ├── parse_replay.py           # 回放解析与数据导出入口
-│   ├── stats_validation.py       # 统计字段检查
-│   ├── report_generator.py       # Markdown 报告生成
-│   ├── model_inference.py        # 本地模型加载与直接推理入口
-│   ├── model_service.py          # 本机 HTTP 模型服务入口
-│   └── model_client.py           # 独立 HTTP 调用入口
+│   ├── examples/
+│   │   └── read_config_example.py  # 配置读取示例（T00）
+│   ├── replay/
+│   │   ├── parse_replay.py         # 回放解析与数据导出（T01）
+│   │   ├── stats_validation.py    # 统计字段检查
+│   │   └── report_generator.py    # 数据检查报告
+│   └── model/
+│       ├── model_inference.py     # 本地模型直接推理（T02）
+│       ├── model_service.py       # 本机 HTTP 模型服务
+│       └── model_client.py        # 独立 HTTP 客户端
 ├── tests/
-│   ├── test_stats_validation.py  # 字段边界情况测试
-│   └── test_export_records.py    # 导出记录对应关系测试
+│   ├── t01/
+│   │   ├── __init__.py             # 支持 unittest 发现子目录测试
+│   │   ├── test_stats_validation.py  # 统计字段边界测试
+│   │   └── test_export_records.py    # 导出结果与源数据对应检查
+│   └── t02/
+│       └── verify_acceptance.py   # 真实模型服务验收，单独运行
 ├── .gitignore
 ├── requirements.txt             # 当前使用的第三方依赖
 └── README.md
 ```
 
 `.venv/` 为本地虚拟环境目录，由使用者创建，不纳入版本控制。
+
+新增文件默认按用途归入仓库：程序放入 `src/` 对应子目录，测试和验收脚本放入 `tests/`，配置放入 `configs/`，运行记录放入 `results/`。模型权重等大文件可存放在仓库外；其他例外应先说明理由并经项目维护者确认。
 
 ## 安装与运行
 
@@ -101,13 +110,13 @@ data/raw/2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay
 读取示例配置：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\read_config_example.py
+.\.venv\Scripts\python.exe -X utf8 .\src\examples\read_config_example.py
 ```
 
 解析回放并生成数据与报告：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\parse_replay.py
+.\.venv\Scripts\python.exe -X utf8 .\src\replay\parse_replay.py
 ```
 
 运行后可查看：
@@ -158,7 +167,7 @@ python -m venv .venv
 #### 运行配置读取程序
 
 ```powershell
-.\.venv\Scripts\python.exe .\src\read_config_example.py
+.\.venv\Scripts\python.exe .\src\examples\read_config_example.py
 ```
 
 程序读取 configs/example.json，并打印 Python 路径、配置路径和配置内容。
@@ -171,13 +180,13 @@ python -m venv .venv
 
 ### T01 回放解析与统计导出
 
-代码职责：`src/parse_replay.py` 负责解析与数据导出，`src/stats_validation.py` 负责字段检查，`src/report_generator.py` 负责将检查结果整理成 Markdown 报告。报告模块通过 `write_t01_report` 接收数据，不自行解析回放。
+代码职责：`src/replay/parse_replay.py` 负责解析与数据导出，`src/replay/stats_validation.py` 负责字段检查，`src/replay/report_generator.py` 负责将检查结果整理成 Markdown 报告。报告模块通过 `write_t01_report` 接收数据，不自行解析回放。
 
 在项目根目录执行。当前支持范围仅为本次已验证的回放 A，不代表所有版本都兼容。
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -X utf8 .\src\parse_replay.py
+.\.venv\Scripts\python.exe -X utf8 .\src\replay\parse_replay.py
 ```
 
 程序读取 `data/raw` 中代码指定的回放，并核对 `data/manifest.csv` 中的 SHA-256、游戏版本和解析器版本。更换回放时必须核实来源清单，不能仅复用同名旧文件的记录。
@@ -201,14 +210,14 @@ python -m venv .venv
 
 本阶段不需要新增第三方依赖。人工复核结果保存在 `results/T01/manual_review.md`。
 
-### T02 模型推理与服务（进行中）
+### T02 模型推理与服务
 
 模型：`Qwen/Qwen3-1.7B`，模型与分词器固定版本均为 `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`。获取方式为 Hugging Face 官方模型仓库，下载时通过 `snapshot_download` 的 `revision` 参数固定上述提交。模型权重保存在仓库之外，默认位置为仓库同级的 `model_assets/Qwen3-1.7B/`。
 
 运行前，下载该固定版本的模型权重、配置、分词器及对话模板文件；检查 [模型配置](configs/model.json) 中的 `model_path`。相对路径以仓库根目录为基准，换电脑时可调整，也可填写绝对路径。
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\model_inference.py
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_inference.py
 ```
 
 程序只读取本地文件，使用 CUDA、FP16 和官方对话模板，关闭思考模式；非思考模式的采样参数依据下载模型中的 README。`max_new_tokens` 限制新增 token 数量，不是汉字数。默认回答和设置保存在 [直接推理记录](results/T02/direct_inference.json)，其中分别记录模型加载耗时与生成耗时。重复执行会覆盖该记录。
@@ -216,7 +225,7 @@ python -m venv .venv
 可修改问题、回答长度和记录位置，例如：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\model_inference.py --prompt "请用一句简短的中文介绍你自己。" --max-new-tokens 64 --output results/T02/direct_inference_64.json
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_inference.py --prompt "请用一句简短的中文介绍你自己。" --max-new-tokens 64 --output results/T02/direct_inference_64.json
 ```
 
 #### 启动模型服务
@@ -224,7 +233,7 @@ python -m venv .venv
 在仓库根目录执行：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\model_service.py
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_service.py
 ```
 
 地址由 `configs/model.json` 的 `service` 项配置，默认仅监听 `127.0.0.1:8000`。服务启动时加载一次模型，日志显示 `Application startup complete` 后可以发送请求。服务运行期间保持该终端打开，结束时按 `Ctrl+C`。当前使用一个进程，不启用热重载。
@@ -252,7 +261,7 @@ python -m venv .venv
 先按上一节启动服务，等待模型加载完成；保持服务终端打开，在另一个终端运行：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\model_client.py
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_client.py
 ```
 
 也可以在 PyCharm 或 VS Code 中直接运行 `model_client.py`，解释器选择项目 `.venv`。客户端只使用 `requests` 发送 HTTP 请求，GPU 推理由服务进程完成。
@@ -260,7 +269,7 @@ python -m venv .venv
 客户端读取 `configs/model.json` 中的地址、端口、默认回答长度和 `service.timeout_seconds`。默认连接与读取等待超时为 30 秒，可通过参数调整：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\src\model_client.py --prompt "请用一句话解释什么是人工智能。" --max-new-tokens 64 --timeout 30
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_client.py --prompt "请用一句话解释什么是人工智能。" --max-new-tokens 64 --timeout 30
 ```
 
 程序打印回答、新增 token 数、服务端生成耗时和客户端 HTTP 请求耗时。HTTP 请求耗时包含通信及服务端处理，不能当作纯 GPU 生成耗时；超时设置也不是整个请求的总耗时上限。客户端超时不会取消服务端已开始的生成，请勿立即连续重试。
@@ -269,7 +278,38 @@ python -m venv .venv
 
 已使用独立客户端取得真实模型回答，并验证指定本机端口未启动服务时会明确报错，见 [连接失败记录](results/T02/client_unavailable.json)。该失败检查使用单独的未监听端口，未中断已运行的模型服务。
 
-T02 尚待完成长度调整比较、超时与服务错误处理的实际调用检查，以及服务重启后的检查。
+#### T02 运行验收
+
+2026-11-02 已完成真实模型与独立客户端的验收，完整请求、回答、错误详情及重启前后状态见 [验收汇总](results/T02/acceptance.json)，重启加载过程见 [重启日志](results/T02/restart_service.log)。
+
+长度比较先进行一次预热，再使用相同问题、对话模板、模型版本和采样设置，仅调整 `max_new_tokens`。问题为“请写一段约300字的中文说明，介绍人工智能的定义、常见应用和局限。”
+
+| 新增 token 上限 | 实际新增 token | 生成耗时（秒） | 是否以结束标记停止 |
+| --- | --- | --- | --- |
+| 32 | 32 | 1.095 | false |
+| 128 | 128 | 4.327 | false |
+
+两次均达到长度上限，回答被截断；该比较只记录本次长度与耗时变化，不代表回答完整性、质量或稳定性能。`max_new_tokens` 是上限，不保证每次都生成到该长度。
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 回答长度设为 0 | 服务返回 422，客户端保存错误详情并以退出码 1 结束 |
+| 实际生成请求的等待超时设为 0.02 秒 | 客户端明确报告超时；服务端继续完成已开始的生成 |
+| 超时后后台仍在生成时再次请求 | 服务返回 503，客户端明确报告模型忙碌 |
+| 后台生成结束后再调用 | 成功返回真实回答，原服务进程未更换 |
+| 停止模型服务后调用客户端 | 明确报告连接失败 |
+| 重新启动服务后调用客户端 | 新服务进程加载相同版本模型，客户端成功返回真实回答 |
+
+本次验收结束后测试服务已停止。继续使用时，先运行 `model_service.py`，等待加载完成，再运行 `model_client.py`。
+
+重新执行验收时，先确保模型已下载、GPU 可用，且模型服务端口未被占用。在仓库根目录运行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\tests\t02\verify_acceptance.py --output-dir results/T02/recheck
+```
+
+脚本自行启动和重启测试服务，结束后释放端口。验收输出为 `acceptance.json` 和 `restart_service.log`；若省略 `--output-dir`，会覆盖 `results/T02/` 下的同名记录。该脚本不属于 `unittest discover` 的常规测试入口。
+
 
 
 

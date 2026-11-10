@@ -1,12 +1,4 @@
-"""
-T02：将本地模型推理包装为仅供本机调用的 HTTP 服务。
-
-职责：
-- 启动服务
-- 校验请求
-- 调用推理函数
-- 返回结果
-"""
+"""T02 本机模型服务，负责模型生命周期、HTTP 请求校验和推理调度。"""
 
 from contextlib import asynccontextmanager
 import json
@@ -27,7 +19,7 @@ logger = logging.getLogger("uvicorn.error")
 
 
 class GenerateRequest(BaseModel):
-    """只接收问题和可选的长度上限，其他生成设置沿用模型配置。"""
+    """生成接口的请求结构，包含问题和可选的新增 token 上限。"""
 
     model_config = ConfigDict(extra="forbid")  # 禁止接收未定义的字段
     prompt: str = Field(strict=True, min_length=1, max_length=4000)
@@ -36,10 +28,13 @@ class GenerateRequest(BaseModel):
     @field_validator("prompt")
     @classmethod
     def reject_blank_prompt(cls, value: str) -> str:
-        """
-        自定义检查方法，通过校验器确保 prompt 不为空白字符
-        - cls: 代表当前类
-        - value: 要验证的字段值
+        """拒绝仅由空白字符组成的问题。
+
+        Args:
+            - value (str): 请求中的问题文本。
+
+        Returns:
+            - value (str): 通过校验的原始问题文本，保留首尾空白。
         """
         if not value.strip():
             raise ValueError("问题不能只包含空白字符。")
@@ -48,7 +43,11 @@ class GenerateRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """在接收请求前加载一次模型；模型加载失败时让服务启动失败。"""
+    """在服务启动时加载模型并设置共享状态，在正常退出时释放资源。
+
+    Args:
+        - app (FastAPI): 当前服务应用。模型、分词器、生成锁和健康信息存入 app.state。
+    """
     config = json.loads((PROJECT_ROOT / "configs/model.json").read_text(encoding="utf-8"))
     logger.info("Loading model: %s; revision: %s", config["model_id"], config["revision"])
     started = time.perf_counter()
@@ -59,7 +58,7 @@ async def lifespan(app: FastAPI):
     app.state.config = config
     app.state.tokenizer = tokenizer
     app.state.model = model
-    # 请求在工作线程中执行；锁用于防止多次生成同时占用 GPU。
+    # 请求在工作线程中执行，生成锁保证同一时刻只有一个请求使用模型生成。
     app.state.generation_lock = Lock()
     app.state.health = {
         "status": "ready",
@@ -82,22 +81,38 @@ async def lifespan(app: FastAPI):
         torch.cuda.empty_cache()
         logger.info("Model released.")
 
-# 创建 FastAPI 应用
+# 将模型的加载和释放绑定到 FastAPI 应用的生命周期。
 app = FastAPI(title="SC2 本地模型服务", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/health")
 def health():
-    """返回实际模型设备与加载信息；不执行生成。"""
+    """读取服务启动时记录的模型状态。
+
+    Returns:
+        - state (dict): 模型标识、版本、实际设备和精度、显卡名称、
+          加载耗时（秒）及服务进程编号。
+    """
     return app.state.health
 
 
 @app.post("/generate")
 def generate(request: GenerateRequest):
-    """校验请求后调用真实模型；每次请求使用独立配置，避免改写默认值。"""
+    """处理已通过请求校验的问题，并调用已加载模型生成回答。
+
+    Args:
+        - request (GenerateRequest): 用户问题和可选的新增 token 上限。
+          省略上限时沿用服务默认设置。
+
+    Returns:
+        - response (dict): 模型标识和版本、设备、实际生成设置、
+          输入消息、回答、token 数、停止状态及生成耗时（秒）。
+    """
+    # 非阻塞获取生成锁。模型忙碌时立即返回 503，让客户端自行决定何时重试。
     if not app.state.generation_lock.acquire(blocking=False):
         raise HTTPException(status_code=503, detail="模型正在生成回答，请稍后重试。")
     try:
+        # 请求只修改配置副本，后续请求仍使用服务的默认值。
         config = app.state.config.copy()
         if request.max_new_tokens is not None:
             config["max_new_tokens"] = request.max_new_tokens
@@ -123,11 +138,12 @@ def generate(request: GenerateRequest):
 
 
 def main():
+    """读取监听配置并启动单进程 Uvicorn 服务。"""
     config = json.loads((PROJECT_ROOT / "configs/model.json").read_text(encoding="utf-8"))
     service = config["service"]
     if service["host"] != "127.0.0.1":
         raise ValueError("当前服务仅支持本机地址 127.0.0.1。")
-    # 使用一个进程，避免多个工作进程各自加载模型；关闭热重载。
+    # 单进程且关闭热重载，避免重复加载模型权重。
     uvicorn.run(app, host=service["host"], port=service["port"], workers=1, reload=False)
 
 

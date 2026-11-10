@@ -1,3 +1,5 @@
+"""T01 回放解析入口，核对来源并导出统计事件、样本和检查报告。"""
+
 from pathlib import Path
 from importlib.metadata import version
 from collections import defaultdict
@@ -9,7 +11,7 @@ from sc2reader.events.tracker import PlayerStatsEvent
 from stats_validation import STAT_FIELDS, check_stat
 from report_generator import write_t01_report
 
-project_root = Path(__file__).resolve().parent.parent
+project_root = Path(__file__).resolve().parents[2]
 replay_path = project_root / r"data\raw\2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay"
 
 # 检查基本配置
@@ -46,8 +48,7 @@ for player in replay.players:
 print("\n","="*50)
 print("Tracker 事件分析")
 print("-"*50)
-# 从全部 tracker 事件中筛选玩家统计事件
-# 逐个遍历回放中的 Tracker 事件，判断当前事件是否为 PlayerStatsEvent 类型或其子类，把符合条件的事件对象放进列表
+# Tracker 中有多种事件。这里只统计记录玩家经济和工人数的 PlayerStatsEvent。
 stats_events = [
     event
     for event in replay.tracker_events
@@ -72,9 +73,7 @@ print("-" * 50)
 # 同一个玩家、同一个时间编号，可能对应多条事件，用字典保存
 grouped_events = defaultdict(list)
 
-# enumerate() 每次提供两个值：
-# - tracker_index：当前事件的序号，从 0 开始
-# - event：当前事件对象
+# 保留事件在完整 Tracker 列表中从 0 开始的序号，便于从导出样本追溯原始记录。
 for tracker_index, event in enumerate(replay.tracker_events):
     # 只处理 PlayerStatsEvent 类型的事件
     if isinstance(event, PlayerStatsEvent):

@@ -1,6 +1,6 @@
 # 启动记录与错误排查
 
-运行命令 `.\.venv\Scripts\python.exe .\src\read_config_example.py`
+运行命令 `.\.venv\Scripts\python.exe .\src\examples\read_config_example.py`
 
 运行报错，终端信息如下
 

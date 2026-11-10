@@ -12,11 +12,16 @@ def write_t01_report(
     stats_event_count: int,
     output_dir: Path,
 ) -> Path:
-    """生成数据检查报告，并返回文件路径。
+    """将调用方已核验的比赛摘要和样本写成 Markdown 报告。
 
-    info 是比赛与质量检查摘要，sample_rows 是带字段状态的样本记录。
-    调用方负责提前完成校验；本函数只组织文字和表格，不修改输入数据。
-    output_dir 是调用方已创建的报告目录，文件名固定为 data_check.md。
+    Args:
+        - info (dict): 回放来源、解析版本、共同采样点、冲突和字段状态摘要。
+        - sample_rows (list[dict]): 已整理的样本行，含玩家、时间、统计值及各字段状态。
+        - stats_event_count (int): 回放中参与统计检查的事件总数。
+        - output_dir (Path): 调用方已创建的报告输出目录。
+
+    Returns:
+        - report_path (Path): 生成的 data_check.md 文件路径。
     """
     # 将报告所需的摘要取出，避免依赖解析程序中的回放对象或全局变量。
     replay_id = info["replay_id"]
@@ -28,7 +33,7 @@ def write_t01_report(
     conflict_count = len(info["conflict_keys"])
     quality_counts = info["field_status_counts_all_events"]
 
-    # 先组织报告内容；无效字段显示“空”，不将其替换为零。
+    # 报告用“空”标记无效字段，便于与有效的零值区分。
     report = [
         f"# 回放 {replay_id} 的 T01 数据检查记录", "",
         "本文件汇总解析与字段一致性检查结果。人工复核记录见同目录 manual_review.md。", "",

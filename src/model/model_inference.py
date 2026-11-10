@@ -1,10 +1,4 @@
-"""
-T02：从本地加载固定版本的模型，完成直接推理并保存实际运行记录。
-
-职责：
-- 加载模型
-- 生成回答
-"""
+"""T02 本地模型推理，提供模型加载、回答生成和命令行记录功能。"""
 
 import argparse  # 用于读取命令行参数
 from datetime import datetime, timezone
@@ -17,11 +11,19 @@ import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def load_local_model(config: dict):
-    """只读取本地模型文件；显卡不可用时明确报错，便于发现环境问题。"""
+    """从本地目录加载分词器和模型，将模型放到 CUDA 设备并设为评估模式。
+
+    Args:
+        - config (dict): 模型配置。model_path 指定模型目录，相对路径以仓库根目录为基准。
+          device 和 dtype 分别指定运行设备和精度，当前要求 cuda 和 float16。
+
+    Returns:
+        - (tokenizer, model) (tuple): 分词器和已在 CUDA 上进入评估模式的生成模型。
+    """
     model_path = (PROJECT_ROOT / config["model_path"]).resolve()
     if not model_path.is_dir():
         raise FileNotFoundError(f"模型目录不存在：{model_path}")
@@ -30,7 +32,7 @@ def load_local_model(config: dict):
     if config["dtype"] != "float16":
         raise ValueError("当前加载程序支持的 dtype 为 float16。")
     
-    # 从本地加载 tokenizer 和模型；不使用自动分配设备的功能，避免额外依赖。 
+    # 只读本地模型文件，保证推理使用已下载的版本。
     print(f"加载本地模型：{model_path}", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
     # 显式指定精度，再将权重放到显卡；无需自动分配设备所需的额外依赖。
@@ -42,7 +44,19 @@ def load_local_model(config: dict):
 
 
 def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
-    """沿用模型提供的对话模板，返回实际生成文本、长度及耗时。"""
+    """按模型对话模板生成回答，并记录新增 token 数和生成耗时。
+
+    Args:
+        - tokenizer (PreTrainedTokenizerBase): 与模型匹配的分词器，负责模板渲染和编解码。
+        - model (PreTrainedModel): 已加载到 CUDA 设备的生成模型。
+        - prompt (str): 用户问题，内容不能全为空白。
+        - config (dict): 生成设置，包括随机种子、思考模式、输出上限及采样参数。
+          max_new_tokens 必须是 1 至 512 的整数。
+
+    Returns:
+        - result (dict): 包含输入消息、渲染后的提示、回答、输入和新增 token 数、
+          是否遇到结束标记，以及以秒为单位的生成耗时。
+    """
     # strip() 去掉字符串首尾的空白字符后判断是否为空
     if not prompt.strip(): 
         raise ValueError("问题不能为空。")
@@ -52,7 +66,7 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
 
     set_seed(config["seed"])
     messages = [{"role": "user", "content": prompt}]
-    # 固定关闭思考模式，后续推理和训练需沿用相同的模板与设置。
+    # 思考模式由配置决定。对比实验应记录并统一这个设置。
     rendered_prompt = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
@@ -68,7 +82,7 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
     # 计算输入的 token 数量
     input_tokens = inputs["input_ids"].shape[1]  # [输入条数, 每条输入的 token 数]
 
-    # CUDA 异步执行；前后同步后再计时，记录本次生成所耗时间。
+    # 生成前后同步 CUDA，避免异步执行造成计时偏差。
     torch.cuda.synchronize()  # 确保前面的操作完成后再开始计时
     started = time.perf_counter()
     with torch.inference_mode():
@@ -88,7 +102,7 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
     new_ids = output[0, input_tokens:]
     # EOS 表示序列结束标记
     eos_ids = model.generation_config.eos_token_id
-    # 生成结果中可能包含多个 EOS token，统一转换为列表，便于后续判断。
+    # 模型配置可能指定一个或多个 EOS 编号，统一按列表检查最后一个新增 token。
     eos_ids = eos_ids if isinstance(eos_ids, list) else [eos_ids]
     return {
         "messages": messages,
@@ -102,6 +116,7 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
 
 
 def main():
+    """读取命令行参数，执行一次本地推理并将环境信息和回答写入 JSON。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="configs/model.json")
     parser.add_argument("--prompt", default="请用一句简短的中文介绍你自己。")
