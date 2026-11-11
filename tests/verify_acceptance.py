@@ -22,7 +22,7 @@ from urllib.request import urlopen
 
 
 # 从脚本位置定位仓库根目录，使配置和脚本路径不受调用目录影响。
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / "configs/model.json").read_text(encoding="utf-8"))
 HOST, PORT = CONFIG["service"]["host"], CONFIG["service"]["port"]
 BASE_URL = f"http://{HOST}:{PORT}"

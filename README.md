@@ -10,6 +10,8 @@
 
 T03 已完成三版推理、模板选型和预留题复核。示例版作为后续提示基线，复核发现它仍会遗漏数值和证据不足的理由。
 
+T04 已实现回放查询工具，当前可直接查询回放 A 的已导出记录。
+
 ### 当前功能
 
 - 读取 JSON 配置，显示配置内容与 Python 解释器路径。
@@ -39,7 +41,8 @@ SC2_Playback_QandA_System/
 │   │   └── A_stats_sample.csv     # 六条统计样本
 │   └── manifest.csv              # 回放来源、校验值与版本清单
 ├── docs/
-│   └── fields.md                 # 字段定义及异常处理规则
+│   ├── fields.md                 # 字段定义及异常处理规则
+│   └── replay_tools.md           # T04 工具接口与错误说明
 ├── eval/
 │   ├── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 │   └── holdout_A.jsonl            # T03 选型后的复核题
@@ -53,6 +56,7 @@ SC2_Playback_QandA_System/
 │   ├── T01/                      # 检查报告、人工复核与运行记录
 │   └── T02/                      # 模型实际推理记录
 ├── src/
+│   ├── tools.py                  # T04 回放信息与统计查询
 │   ├── evaluation/
 │   │   └── run_prompt_comparison.py # T03 三版提示批量推理
 │   ├── examples/
@@ -66,12 +70,10 @@ SC2_Playback_QandA_System/
 │       ├── model_service.py       # 本机 HTTP 模型服务
 │       └── model_client.py        # 独立 HTTP 客户端
 ├── tests/
-│   ├── t01/
-│   │   ├── __init__.py             # 支持 unittest 发现子目录测试
-│   │   ├── test_stats_validation.py  # 统计字段边界测试
-│   │   └── test_export_records.py    # 导出结果与源数据对应检查
-│   └── t02/
-│       └── verify_acceptance.py   # 真实模型服务验收，单独运行
+│   ├── test_stats_validation.py   # T01 统计字段边界测试
+│   ├── test_export_records.py     # T01 导出结果与源数据对应检查
+│   ├── test_tools.py              # T04 查询工具测试
+│   └── verify_acceptance.py      # T02 真实模型服务验收，单独运行
 ├── .gitignore
 ├── requirements.txt             # 当前使用的第三方依赖
 └── README.md
@@ -317,7 +319,7 @@ python -m venv .venv
 重新执行验收时，先确保模型已下载、GPU 可用，且模型服务端口未被占用。在仓库根目录运行：
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 .\tests\t02\verify_acceptance.py --output-dir results/T02/recheck
+.\.venv\Scripts\python.exe -X utf8 .\tests\verify_acceptance.py --output-dir results/T02/recheck
 ```
 
 脚本自行启动和重启测试服务，结束后释放端口。验收输出为 `acceptance.json` 和 `restart_service.log`；若省略 `--output-dir`，会覆盖 `results/T02/` 下的同名记录。该脚本不属于 `unittest discover` 的常规测试入口。
@@ -376,6 +378,16 @@ python -m venv .venv
 结果保存为 `results/T03/holdout_answers_<UTC时间>.jsonl`，用于核对零差值、资料不足的理由、来源和回答格式。
 
 2026-11-11 的三条复核回答均符合两行格式并列全来源序号，内容通过 0/3。模型遗漏双方矿量或缺少记录的理由，并在因果题上把证据不足误判为可以确定。[复核回答](results/T03/holdout_answers_20261111T141911423096Z.jsonl) · [逐题复核](results/T03/prompt_selection.md#预留记录复核)
+
+### T04 回放查询工具
+
+`get_replay_info` 返回玩家信息和实际可查的共同采样点。`get_stats` 返回指定时刻的双方统计、玩家 1 减玩家 2 的差值以及来源。当前回放 A 可查 `1`、`160` 和 `320`。[工具参数与返回值](docs/replay_tools.md)
+
+在仓库根目录运行查询工具测试。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_tools.py" -v
+```
 
 > ## 数据来源与官方资料
 >

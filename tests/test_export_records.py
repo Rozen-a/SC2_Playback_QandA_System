@@ -11,7 +11,7 @@ class ExportRecordTests(unittest.TestCase):
 
     def test_sample_matches_raw_evidence(self):
         """核对样本数量、来源校验值、事件身份和各统计字段。"""
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[1]
         raw_path = root / "data/decoded/A_tracker_stats.json"
         # 本用例读取现有导出产物。尚未生成原始事件 JSON 时，提示先运行解析程序。
         if not raw_path.exists():

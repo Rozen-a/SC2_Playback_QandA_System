@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 # 按文件直接运行时，将仓库根目录加入搜索路径，以支持下面的完整模块路径。
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.replay.stats_validation import check_stat
 
 
