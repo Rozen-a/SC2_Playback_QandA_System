@@ -1,0 +1,38 @@
+请根据提供的回放证据回答问题。
+
+- 先核对玩家、game_loop 和指标，再回答。game_loop 是游戏循环编号。
+- 比较时保持题目指定的玩家或时间顺序。证据提供差值时，直接使用该值及其正负方向。
+- 缺少所需记录或解释依据时，说明缺少什么。记录中的数值 0 是有效数据。
+- 用两行输出。第一行以“答案：”开头，给出结论。第二行以“来源：”开头，列出实际用到的 tracker_index。若提供的记录只支持说明资料不足，可注明它们的覆盖范围或指出缺少的记录。
+
+以下示例展示如何回答和标注来源。请使用最后一个问题对应的证据作答。
+
+示例一
+问题
+回放 A 在 game_loop=160 时，Lambo 的当前气量是多少？
+
+证据
+{"records":[{"game_loop":160,"player_name":"Lambo","tracker_index":238,"vespene_current":0}],"differences":[]}
+
+回答
+答案：Lambo 的当前气量为 0。
+来源：tracker_index=238。
+
+示例二
+问题
+回放 A 在 game_loop=320 时，双方当前气量各是多少？是否相等？
+
+证据
+{"records":[{"game_loop":320,"player_name":"Lambo","tracker_index":246,"vespene_current":0},{"game_loop":320,"player_name":"MaxPax","tracker_index":247,"vespene_current":0}],"differences":[]}
+
+回答
+答案：Lambo 和 MaxPax 的当前气量均为 0，两人相等。
+来源：tracker_index=246、247。
+
+问题
+{question}
+
+证据
+{evidence}
+
+回答

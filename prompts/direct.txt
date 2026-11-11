@@ -1,0 +1,7 @@
+问题
+{question}
+
+证据
+{evidence}
+
+回答

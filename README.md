@@ -8,7 +8,7 @@
 
 当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
-T03 已整理回放 A 的 10 道开发题及参考答案，下一步编写三版提示。
+T03 已整理回放 A 的 10 道开发题及参考答案，并编写三版候选提示。
 
 ### 当前功能
 
@@ -42,6 +42,10 @@ SC2_Playback_QandA_System/
 │   └── fields.md                 # 字段定义及异常处理规则
 ├── eval/
 │   └── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
+├── prompts/
+│   ├── direct.txt                # 直接提问
+│   ├── rules.txt                 # 加入回答规则和格式
+│   └── examples.txt              # 在规则版基础上加入示例
 ├── results/
 │   ├── T00/                      # 环境练习与排错记录
 │   ├── T01/                      # 检查报告、人工复核与运行记录
@@ -326,6 +330,16 @@ python -m venv .venv
 后续调用模型时，三版提示共用同一题的 `question` 和 `evidence`。证据包含选定的统计字段、`game_loop`、`tracker_index`，以及题目所需的预计算差值。`reference` 保存参考答案、判定要点和对应的 Tracker 序号，供生成后核对。
 
 证据取自 [T01 统计样本](data/processed/A_stats_sample.csv)，可按 `tracker_index` 在 [人工复核表](results/T01/manual_review.md) 和 [Tracker 统计](data/decoded/A_tracker_stats.json) 中定位。题集使用 `game_loop=160` 和 `320` 的记录，`game_loop=1` 的记录预留给后续复核。
+
+#### 三版候选提示
+
+| 提示 | 内容 |
+| --- | --- |
+| [直接版](prompts/direct.txt) | 提供当前题的问题和证据 |
+| [规则版](prompts/rules.txt) | 增加数值、差值、缺失信息与来源要求，使用“答案”和“来源”两行作答 |
+| [示例版](prompts/examples.txt) | 沿用规则版，增加两个来自 T01 人工复核记录的问答示例 |
+
+三版使用相同的 `{question}` 和 `{evidence}` 占位符。调用时分别填入题目原文和序列化后的证据 JSON，`reference` 供生成后评分。对比完成后，将选中的版本保存为 `prompts/answer.txt`。
 
 > ## 数据来源与官方资料
 >
