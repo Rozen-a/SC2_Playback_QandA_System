@@ -8,6 +8,8 @@
 
 当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
+T03 已整理回放 A 的 10 道开发题及参考答案，下一步编写三版提示。
+
 ### 当前功能
 
 - 读取 JSON 配置，显示配置内容与 Python 解释器路径。
@@ -38,6 +40,8 @@ SC2_Playback_QandA_System/
 │   └── manifest.csv              # 回放来源、校验值与版本清单
 ├── docs/
 │   └── fields.md                 # 字段定义及异常处理规则
+├── eval/
+│   └── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 ├── results/
 │   ├── T00/                      # 环境练习与排错记录
 │   ├── T01/                      # 检查报告、人工复核与运行记录
@@ -312,6 +316,16 @@ python -m venv .venv
 
 
 
+
+### T03 回放问答提示对比
+
+#### 开发题与参考答案
+
+[开发题集](eval/dev_A.jsonl) 使用 UTF-8 编码，每行是一道题。共 10 题，覆盖单项读取（含气量为零）、双方比较（含相等）、正负差值、跨时间变化，以及缺少对应时点记录或缺少解释依据的情况。
+
+后续调用模型时，三版提示共用同一题的 `question` 和 `evidence`。证据包含选定的统计字段、`game_loop`、`tracker_index`，以及题目所需的预计算差值。`reference` 保存参考答案、判定要点和对应的 Tracker 序号，供生成后核对。
+
+证据取自 [T01 统计样本](data/processed/A_stats_sample.csv)，可按 `tracker_index` 在 [人工复核表](results/T01/manual_review.md) 和 [Tracker 统计](data/decoded/A_tracker_stats.json) 中定位。题集使用 `game_loop=160` 和 `320` 的记录，`game_loop=1` 的记录预留给后续复核。
 
 > ## 数据来源与官方资料
 >
