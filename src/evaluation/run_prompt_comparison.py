@@ -1,7 +1,8 @@
 """
-T03 批量调用 T02 服务，保存三版提示的原始回答和运行记录。
+T03 批量调用 T02 服务，保存三版对比或选定模板复核的运行记录。
 """
 
+import argparse
 import json
 from datetime import datetime, timezone
 import re
@@ -14,17 +15,22 @@ PLACEHOLDER = re.compile(r"\{(question|evidence)\}")  # 匹配占位符，按顺
 # re.compile() 将正则表达式编译成一个可复用的对象，后面用它做两件事：检查占位符和替换占位符
 
 
-def prepare_requests() -> list[dict]:
+def prepare_requests(holdout: bool = False) -> list[dict]:
     """
-    将开发题填入三个模板，并在调用前检查输入长度。
+    将开发题或复核题填入对应模板，并在调用前检查输入长度。
+
+    Args:
+        - holdout (bool): 为 True 时用选定模板回答复核题。
 
     Returns:
         - requests (list[dict]): 按题目和提示版本排序的请求记录。
     """
+    prompt_names = ("answer",) if holdout else PROMPT_NAMES
+    dataset = "holdout_A.jsonl" if holdout else "dev_A.jsonl"
     # 模板名作为键、模板全文作为值
     templates = {
         name: (PROJECT_ROOT / "prompts" / f"{name}.txt").read_text(encoding="utf-8")
-        for name in PROMPT_NAMES
+        for name in prompt_names
     }
     # 检查每个模板是否包含 question 和 evidence 占位符，且各一次，且{question} 出现在 {evidence} 前面
     for name, template in templates.items():
@@ -32,7 +38,7 @@ def prepare_requests() -> list[dict]:
             raise ValueError(f"{name}.txt 必须依次包含 question 和 evidence 占位符，各一次。")
 
     requests = []
-    questions = (PROJECT_ROOT / "eval" / "dev_A.jsonl").read_text(encoding="utf-8")
+    questions = (PROJECT_ROOT / "eval" / dataset).read_text(encoding="utf-8")
     for line in questions.splitlines():
         question = json.loads(line)  # `json.loads()` 是从 JSON 文本读成 Python 对象，`json.dumps()` 是把 Python 对象写成 JSON 文本
         # 单次替换保留示例里的 JSON 大括号，也避免把评分字段传给模型。
@@ -49,7 +55,7 @@ def prepare_requests() -> list[dict]:
                 raise ValueError(f"{question['id']}/{name} 超过服务的 4000 字符限制。")
             requests.append({"question_id": question["id"], "variant": name, "prompt": prompt})
     if not requests:
-        raise ValueError("开发题集为空。")
+        raise ValueError(f"{dataset} 题集为空。")
     return requests
 
 
@@ -60,9 +66,12 @@ def main() -> int:
     Returns:
         - exit_code (int): 全部成功为 0，输入无效或调用失败为 1。
     """
+    parser = argparse.ArgumentParser(description=__doc__.strip())
+    parser.add_argument("--holdout", action="store_true", help="用选定模板回答回放 A 的复核题")
+    args = parser.parse_args()
     # 先准备整批请求，再读模型配置
     try:
-        pending = prepare_requests()
+        pending = prepare_requests(holdout=args.holdout)
         config = json.loads((PROJECT_ROOT / "configs" / "model.json").read_text(encoding="utf-8"))
     except (OSError, ValueError, KeyError) as error:
         print(f"无法准备对比请求：{error}")
@@ -75,7 +84,8 @@ def main() -> int:
     config_keys = ("do_sample", "temperature", "top_p", "top_k", "min_p", "seed")
     settings = {**expected, **{key: config[key] for key in config_keys}}
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")   #用 UTC 时间生成文件名标识
-    output = PROJECT_ROOT / "results" / "T03" / f"answers_{run_id}.jsonl"
+    file_prefix = "holdout_answers" if args.holdout else "answers"
+    output = PROJECT_ROOT / "results" / "T03" / f"{file_prefix}_{run_id}.jsonl"
     output.parent.mkdir(parents=True, exist_ok=True)
     print(f"输出文件：{output}", flush=True)
 

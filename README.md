@@ -8,7 +8,7 @@
 
 当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
-T03 已完成 10 道开发题的三版推理和逐题核对，初步选用示例版，等待使用预留记录复核。
+T03 已完成三版推理、模板选型和预留题复核。示例版作为后续提示基线，复核发现它仍会遗漏数值和证据不足的理由。
 
 ### 当前功能
 
@@ -41,7 +41,8 @@ SC2_Playback_QandA_System/
 ├── docs/
 │   └── fields.md                 # 字段定义及异常处理规则
 ├── eval/
-│   └── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
+│   ├── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
+│   └── holdout_A.jsonl            # T03 选型后的复核题
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
@@ -362,7 +363,19 @@ python -m venv .venv
 
 #### 对比结果与模板选型
 
-10 道题共生成 30 条实际回答。示例版有 7 道题满足全部内容判定要点，10 道题均完整标出来源并遵循两行格式。已将示例版保存为 [回答模板](prompts/answer.txt)，待用预留的 `game_loop=1` 记录复核。[实际回答](results/T03/answers_20261111T135701504835Z.jsonl) · [逐题比较](results/T03/comparison.csv) · [选型依据与失败案例](results/T03/prompt_selection.md)
+10 道题共生成 30 条实际回答。示例版有 7 道题满足全部内容判定要点，10 道题均完整标出来源并遵循两行格式。示例版已保存为后续使用的 [回答模板](prompts/answer.txt)。[实际回答](results/T03/answers_20261111T135701504835Z.jsonl) · [逐题比较](results/T03/comparison.csv) · [选型依据与失败案例](results/T03/prompt_selection.md)
+
+#### 用预留记录复核回答模板
+
+保持 T02 服务运行，在仓库根目录执行以下命令，用已选模板回答 [复核题集](eval/holdout_A.jsonl) 中的 3 道题。证据来自 `game_loop=1` 的预留记录。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.evaluation.run_prompt_comparison --holdout
+```
+
+结果保存为 `results/T03/holdout_answers_<UTC时间>.jsonl`，用于核对零差值、资料不足的理由、来源和回答格式。
+
+2026-11-11 的三条复核回答均符合两行格式并列全来源序号，内容通过 0/3。模型遗漏双方矿量或缺少记录的理由，并在因果题上把证据不足误判为可以确定。[复核回答](results/T03/holdout_answers_20261111T141911423096Z.jsonl) · [逐题复核](results/T03/prompt_selection.md#预留记录复核)
 
 > ## 数据来源与官方资料
 >
