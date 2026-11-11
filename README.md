@@ -8,7 +8,7 @@
 
 当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
 
-T03 已整理回放 A 的 10 道开发题及参考答案，并编写三版候选提示。
+T03 已完成 10 道开发题的三版推理和逐题核对，初步选用示例版，等待使用预留记录复核。
 
 ### 当前功能
 
@@ -43,6 +43,7 @@ SC2_Playback_QandA_System/
 ├── eval/
 │   └── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 ├── prompts/
+│   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
 │   ├── rules.txt                 # 加入回答规则和格式
 │   └── examples.txt              # 在规则版基础上加入示例
@@ -51,6 +52,8 @@ SC2_Playback_QandA_System/
 │   ├── T01/                      # 检查报告、人工复核与运行记录
 │   └── T02/                      # 模型实际推理记录
 ├── src/
+│   ├── evaluation/
+│   │   └── run_prompt_comparison.py # T03 三版提示批量推理
 │   ├── examples/
 │   │   └── read_config_example.py  # 配置读取示例（T00）
 │   ├── replay/
@@ -339,7 +342,27 @@ python -m venv .venv
 | [规则版](prompts/rules.txt) | 增加数值、差值、缺失信息与来源要求，使用“答案”和“来源”两行作答 |
 | [示例版](prompts/examples.txt) | 沿用规则版，增加两个来自 T01 人工复核记录的问答示例 |
 
-三版使用相同的 `{question}` 和 `{evidence}` 占位符。调用时分别填入题目原文和序列化后的证据 JSON，`reference` 供生成后评分。对比完成后，将选中的版本保存为 `prompts/answer.txt`。
+三版使用相同的 `{question}` 和 `{evidence}` 占位符。调用时分别填入题目原文和序列化后的证据 JSON，`reference` 供生成后评分。
+
+#### 运行三版提示对比
+
+在仓库根目录打开两个 PowerShell 终端。第一个终端启动模型服务并保持运行，已有服务时可直接使用。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\model\model_service.py
+```
+
+等服务显示 `Application startup complete` 后，在第二个终端运行批量脚本。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.evaluation.run_prompt_comparison
+```
+
+脚本逐题发送直接版、规则版和示例版，统一使用模型配置中的输出上限，默认 128 个新增 token。每次运行会在 `results/T03/` 生成新的 `answers_<UTC时间>.jsonl`，保存每次的提示、原始响应、耗时和达到输出上限的标记。全部成功时终端显示已保存 30 条模型回答。若请求失败，脚本保存错误和已完成的记录后退出。处理报错后可重新运行，之前的文件会保留。
+
+#### 对比结果与模板选型
+
+10 道题共生成 30 条实际回答。示例版有 7 道题满足全部内容判定要点，10 道题均完整标出来源并遵循两行格式。已将示例版保存为 [回答模板](prompts/answer.txt)，待用预留的 `game_loop=1` 记录复核。[实际回答](results/T03/answers_20261111T135701504835Z.jsonl) · [逐题比较](results/T03/comparison.csv) · [选型依据与失败案例](results/T03/prompt_selection.md)
 
 > ## 数据来源与官方资料
 >
