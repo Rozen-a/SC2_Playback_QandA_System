@@ -1,0 +1,119 @@
+{
+  "config": {
+    "model_id": "BAAI/bge-small-zh-v1.5",
+    "revision": "7999e1d3359715c523056ef9478215996d62a620",
+    "model_path": "../model_assets/bge-small-zh-v1.5/7999e1d3359715c523056ef9478215996d62a620",
+    "device": "cpu",
+    "notes_path": "knowledge/notes.jsonl",
+    "index_path": "knowledge/notes_index.npz",
+    "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+    "top_k": 3
+  },
+  "results": [
+    {
+      "question": "活跃工人数是什么意思？",
+      "matches": [
+        {
+          "id": "K03",
+          "title": "活跃工人数",
+          "text": "workers_active_count 表示玩家在该采样点的活跃工人数。字段检查使用原始统计键 4。该字段不能直接解释为正在采矿的工人数。",
+          "source": {
+            "path": "docs/fields.md",
+            "section": "字段对应"
+          },
+          "score": 0.715823769569397
+        },
+        {
+          "id": "K08",
+          "title": "原始统计字典与 JSON 键",
+          "text": "事件 JSON 中的 raw_stats 是已解码的统计字典。JSON 对象的键是字符串，可用键 \"0\"、\"1\"、\"4\" 分别核对矿量、气量和活跃工人数。",
+          "source": {
+            "path": "docs/fields.md",
+            "section": "输出与复核"
+          },
+          "score": 0.38693898916244507
+        },
+        {
+          "id": "K01",
+          "title": "当前矿量",
+          "text": "minerals_current 表示玩家在该采样点当前可用的矿量。字段检查会对照已解码的原始统计键 0 与解析器的 minerals_current 属性。",
+          "source": {
+            "path": "docs/fields.md",
+            "section": "字段对应"
+          },
+          "score": 0.3534218370914459
+        }
+      ]
+    },
+    {
+      "question": "统计差值按谁减谁？",
+      "matches": [
+        {
+          "id": "K19",
+          "title": "差值方向与缺失值",
+          "text": "三项差值均按玩家 1 的值减去玩家 2 的值，并保留正负号。任一方的该项不可用时，对应差值为 null。",
+          "source": {
+            "path": "docs/replay_tools.md",
+            "section": "T04 回放查询工具"
+          },
+          "score": 0.5601620674133301
+        },
+        {
+          "id": "K12",
+          "title": "缺失值与有效零值",
+          "text": "查询工具将缺失或不可用的统计值表示为 None，序列化为 JSON 时为 null。统计记录中的有效零值保留为 0。",
+          "source": {
+            "path": "docs/replay_tools.md",
+            "section": "T04 回放查询工具"
+          },
+          "score": 0.5199081301689148
+        },
+        {
+          "id": "K16",
+          "title": "查询指定时刻的统计",
+          "text": "get_stats 接收回放编号 replay_id 和非负整数 game_loop，返回该时刻双方的三项统计、字段状态、差值和来源。",
+          "source": {
+            "path": "docs/replay_tools.md",
+            "section": "T04 回放查询工具"
+          },
+          "score": 0.505091667175293
+        }
+      ]
+    },
+    {
+      "question": "《星际争霸 II》的配乐由谁创作？",
+      "matches": [
+        {
+          "id": "K04",
+          "title": "玩家编号与玩家名",
+          "text": "pid 是统计事件对应的玩家编号，可在回放的玩家列表中定位。player_name 来自解析得到的玩家名。",
+          "source": {
+            "path": "docs/fields.md",
+            "section": "字段对应"
+          },
+          "score": 0.3497309684753418
+        },
+        {
+          "id": "K10",
+          "title": "冲突统计事件",
+          "text": "同一个玩家在同一时刻的多条事件，若完整原始统计内容不同，该玩家与时刻的组合标记为冲突，排除出可查询数据。",
+          "source": {
+            "path": "docs/fields.md",
+            "section": "时间、重复与冲突"
+          },
+          "score": 0.3424852192401886
+        },
+        {
+          "id": "K16",
+          "title": "查询指定时刻的统计",
+          "text": "get_stats 接收回放编号 replay_id 和非负整数 game_loop，返回该时刻双方的三项统计、字段状态、差值和来源。",
+          "source": {
+            "path": "docs/replay_tools.md",
+            "section": "T04 回放查询工具"
+          },
+          "score": 0.3062528073787689
+        }
+      ]
+    }
+  ]
+}
