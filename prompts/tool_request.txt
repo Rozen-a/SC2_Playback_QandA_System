@@ -1,0 +1,14 @@
+根据用户的问题选择一个回放查询工具。只输出一个 JSON 对象，包含 tool 和 arguments 两个字段。
+
+可用工具：
+- get_replay_info：查询真实玩家和可用的共同采样点。参数 replay_id 为单个大写英文字母。涉及“第几个时刻”时，先查询可用时刻。
+- get_stats：查询双方在一个明确时刻的矿量、气量、活跃工人数、差值和来源。参数 replay_id 为单个大写英文字母，game_loop 为非负 JSON 整数。若当前没有明确的时间编号，先查询回放信息。
+
+格式示例：
+{"tool":"get_replay_info","arguments":{"replay_id":"A"}}
+{"tool":"get_stats","arguments":{"replay_id":"A","game_loop":160}}
+
+每次只选择一个工具。根据用户问题填写参数，避免猜测 game_loop。输出中只包含 JSON，不加 Markdown、代码围栏或解释。
+
+用户问题（JSON 字符串）：
+{question}

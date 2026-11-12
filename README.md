@@ -10,7 +10,7 @@
 
 T03 已完成三版推理、模板选型和预留题复核。示例版作为后续提示基线，复核发现它仍会遗漏数值和证据不足的理由。
 
-T04 已实现回放查询工具，当前可直接查询回放 A 的已导出记录。
+T04 已在回放 A 上跑通真实查询问答。首条联调的查询结果正确，模型答对差值并列出来源，但遗漏了双方各自的矿量。
 
 ### 当前功能
 
@@ -50,7 +50,8 @@ SC2_Playback_QandA_System/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
 │   ├── rules.txt                 # 加入回答规则和格式
-│   └── examples.txt              # 在规则版基础上加入示例
+│   ├── examples.txt              # 在规则版基础上加入示例
+│   └── tool_request.txt          # T04 工具选择与请求格式
 ├── results/
 │   ├── T00/                      # 环境练习与排错记录
 │   ├── T01/                      # 检查报告、人工复核与运行记录
@@ -62,6 +63,8 @@ SC2_Playback_QandA_System/
 │   ├── examples/
 │   │   └── read_config_example.py  # 配置读取示例（T00）
 │   ├── replay/
+│   │   ├── tool_qa.py             # T04 查询问答与运行记录
+│   │   ├── tool_request.py        # T04 生成和校验工具请求
 │   │   ├── parse_replay.py         # 回放解析与数据导出（T01）
 │   │   ├── stats_validation.py    # 统计字段检查
 │   │   └── report_generator.py    # 数据检查报告
@@ -73,6 +76,8 @@ SC2_Playback_QandA_System/
 │   ├── test_stats_validation.py   # T01 统计字段边界测试
 │   ├── test_export_records.py     # T01 导出结果与源数据对应检查
 │   ├── test_tools.py              # T04 查询工具测试
+│   ├── test_tool_request.py       # T04 工具请求校验测试
+│   ├── test_tool_qa.py            # T04 查询问答流程测试
 │   └── verify_acceptance.py      # T02 真实模型服务验收，单独运行
 ├── .gitignore
 ├── requirements.txt             # 当前使用的第三方依赖
@@ -388,6 +393,16 @@ python -m venv .venv
 ```powershell
 .\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_tools.py" -v
 ```
+
+模型工具请求由提示约定为 `tool` 和 `arguments` 两个字段。程序检查工具名和参数，校验失败时最多请求一次修正。可直接运行 [工具请求测试](tests/test_tool_request.py) 验证这一过程，测试使用模拟输出。[请求格式与校验说明](docs/replay_tools.md#模型工具请求)
+
+模型服务启动后，可在 IDE 中直接运行 [tool_qa.py](src/replay/tool_qa.py)。终端出现「请输入你的回放问题」后，输入问题并按回车。也可在仓库根目录运行下面的命令传入问题。运行记录保存在 `results/T04/`。[真实模型联调说明](docs/replay_tools.md#真实模型联调)
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.replay.tool_qa --question "回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。"
+```
+
+2026-11-12 联调中，模型首次请求 `get_replay_info` 就通过校验，程序定位第二个采样点 `160` 并执行 `get_stats`。工具返回 Lambo 35、MaxPax 40 和差值 `-5`。最终回答正确表达了差值，引用了 Tracker 序号 238、239，但未报告两人的具体矿量。[本次联调记录](results/T04/tool_qa_20261112T061205628917Z.json)
 
 > ## 数据来源与官方资料
 >

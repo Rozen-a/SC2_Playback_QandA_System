@@ -36,6 +36,7 @@ class ReplayQueryTests(TestCase):
         检查双方数值、来源和差值的负数、正数及零值。
         """
         result = tools.get_stats("A", 160)
+        # 用人工复核过的 A 局记录检查玩家顺序及其对应的来源序号。
         first, second = result["players"]
         self.assertEqual(first["stats"], {
             "minerals_current": 35, "vespene_current": 0, "workers_active_count": 12,
@@ -82,6 +83,7 @@ class ReplayQueryTests(TestCase):
         with stats_path.open(encoding="utf-8-sig", newline="") as stream:
             rows = list(tools.csv.DictReader(stream))
         row = next(row for row in rows if row["tracker_index"] == "238")
+        # 只修改内存中的统计行，保留仓库里的真实回放数据。
         row.update(minerals_current="", minerals_current_status="missing")
         with patch.object(tools.csv, "DictReader", return_value=iter(rows)):
             result = tools.get_stats("A", 160)
@@ -100,6 +102,7 @@ class ReplayQueryTests(TestCase):
             rows = list(tools.csv.DictReader(stream))
         available = tools.get_replay_info("A")["available_game_loops"]
         duplicate = next(row for row in rows if row["tracker_index"] == "238")
+        # 仅重复其中一方的记录，验证整个时点会从共同采样点列表移除。
         with patch.object(tools.csv, "DictReader", return_value=iter([*rows, duplicate])):
             result = tools.get_replay_info("A")
         self.assertEqual(result["available_game_loops"], [frame for frame in available if frame != 160])

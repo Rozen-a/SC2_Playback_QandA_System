@@ -26,3 +26,32 @@
 ```powershell
 .\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_tools.py" -v
 ```
+
+## 模型工具请求
+
+[工具请求提示](../prompts/tool_request.txt) 约定模型输出单个 JSON 对象。例如：
+
+```json
+{"tool":"get_stats","arguments":{"replay_id":"A","game_loop":160}}
+```
+
+[请求校验模块](../src/replay/tool_request.py) 只接受表中两个工具，并检查字段集合、回放编号格式和时刻类型。校验失败时，将错误原因放进修正提示，模型最多再回答一次。返回值中的 `request` 是通过校验的请求，两次都失败时为 `None`。 `attempts` 保存每次原始回答和错误说明。
+
+JSON 校验通过后，问答流程将请求交给对应的查询工具，检查回放是否存在以及时刻是否可查。格式和查询参数共用一次修正机会。可在 IDE 中直接运行 [test_tool_request.py](../tests/test_tool_request.py)，或使用以下命令运行模拟测试。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\tests\test_tool_request.py
+```
+
+## 真实模型联调
+
+启动 T02 模型服务后，在 IDE 中选用项目的 `.venv` 解释器，直接运行 [tool_qa.py](../src/replay/tool_qa.py)，然后在终端提示处输入问题。也可以在仓库根目录运行以下命令，直接传入问题。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.replay.tool_qa --question "回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。"
+```
+
+第二个采样点从当前可查列表定位为 `160`。核对目标是 Lambo 35、MaxPax 40、差值 `-5`，来源序号 238 和 239。指定不可查询的时刻时，流程记录失败原因及可选时刻，结束查询。
+
+每次运行创建独立的 `results/T04/tool_qa_<UTC时间>.json`，记录模型请求与响应、校验尝试、真实查询参数与结果，以及回答或错误。
+

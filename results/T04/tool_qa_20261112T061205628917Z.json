@@ -1,0 +1,224 @@
+{
+  "question": "回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。",
+  "service_url": "http://127.0.0.1:8000",
+  "model_calls": [
+    {
+      "request": {
+        "prompt": "根据用户的问题选择一个回放查询工具。只输出一个 JSON 对象，包含 tool 和 arguments 两个字段。\n\n可用工具：\n- get_replay_info：查询真实玩家和可用的共同采样点。参数 replay_id 为单个大写英文字母。涉及“第几个时刻”时，先查询可用时刻。\n- get_stats：查询双方在一个明确时刻的矿量、气量、活跃工人数、差值和来源。参数 replay_id 为单个大写英文字母，game_loop 为非负 JSON 整数。若当前没有明确的时间编号，先查询回放信息。\n\n格式示例：\n{\"tool\":\"get_replay_info\",\"arguments\":{\"replay_id\":\"A\"}}\n{\"tool\":\"get_stats\",\"arguments\":{\"replay_id\":\"A\",\"game_loop\":160}}\n\n每次只选择一个工具。根据用户问题填写参数，避免猜测 game_loop。输出中只包含 JSON，不加 Markdown、代码围栏或解释。\n\n用户问题（JSON 字符串）：\n\"回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\"\n",
+        "max_new_tokens": 128
+      },
+      "http_status": 200,
+      "request_seconds": 1.849,
+      "response": {
+        "model_id": "Qwen/Qwen3-1.7B",
+        "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "device": "cuda:0",
+        "enable_thinking": false,
+        "max_new_tokens": 128,
+        "messages": [
+          {
+            "role": "user",
+            "content": "根据用户的问题选择一个回放查询工具。只输出一个 JSON 对象，包含 tool 和 arguments 两个字段。\n\n可用工具：\n- get_replay_info：查询真实玩家和可用的共同采样点。参数 replay_id 为单个大写英文字母。涉及“第几个时刻”时，先查询可用时刻。\n- get_stats：查询双方在一个明确时刻的矿量、气量、活跃工人数、差值和来源。参数 replay_id 为单个大写英文字母，game_loop 为非负 JSON 整数。若当前没有明确的时间编号，先查询回放信息。\n\n格式示例：\n{\"tool\":\"get_replay_info\",\"arguments\":{\"replay_id\":\"A\"}}\n{\"tool\":\"get_stats\",\"arguments\":{\"replay_id\":\"A\",\"game_loop\":160}}\n\n每次只选择一个工具。根据用户问题填写参数，避免猜测 game_loop。输出中只包含 JSON，不加 Markdown、代码围栏或解释。\n\n用户问题（JSON 字符串）：\n\"回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\"\n"
+          }
+        ],
+        "rendered_prompt": "<|im_start|>user\n根据用户的问题选择一个回放查询工具。只输出一个 JSON 对象，包含 tool 和 arguments 两个字段。\n\n可用工具：\n- get_replay_info：查询真实玩家和可用的共同采样点。参数 replay_id 为单个大写英文字母。涉及“第几个时刻”时，先查询可用时刻。\n- get_stats：查询双方在一个明确时刻的矿量、气量、活跃工人数、差值和来源。参数 replay_id 为单个大写英文字母，game_loop 为非负 JSON 整数。若当前没有明确的时间编号，先查询回放信息。\n\n格式示例：\n{\"tool\":\"get_replay_info\",\"arguments\":{\"replay_id\":\"A\"}}\n{\"tool\":\"get_stats\",\"arguments\":{\"replay_id\":\"A\",\"game_loop\":160}}\n\n每次只选择一个工具。根据用户问题填写参数，避免猜测 game_loop。输出中只包含 JSON，不加 Markdown、代码围栏或解释。\n\n用户问题（JSON 字符串）：\n\"回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+        "answer": "{\"tool\":\"get_replay_info\",\"arguments\":{\"replay_id\":\"A\"}}",
+        "input_tokens": 259,
+        "generated_tokens": 17,
+        "stopped_on_eos": true,
+        "generation_seconds": 1.66
+      }
+    },
+    {
+      "request": {
+        "prompt": "请根据提供的回放证据回答问题。\n\n- 先核对玩家、game_loop 和指标，再回答。game_loop 是游戏循环编号。\n- 比较时保持题目指定的玩家或时间顺序。证据提供差值时，直接使用该值及其正负方向。\n- 缺少所需记录或解释依据时，说明缺少什么。记录中的数值 0 是有效数据。\n- 用两行输出。第一行以“答案：”开头，给出结论。第二行以“来源：”开头，列出实际用到的 tracker_index。若提供的记录只支持说明资料不足，可注明它们的覆盖范围或指出缺少的记录。\n\n以下示例展示如何回答和标注来源。请使用最后一个问题对应的证据作答。\n\n示例一\n问题\n回放 A 在 game_loop=160 时，Lambo 的当前气量是多少？\n\n证据\n{\"records\":[{\"game_loop\":160,\"player_name\":\"Lambo\",\"tracker_index\":238,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 的当前气量为 0。\n来源：tracker_index=238。\n\n示例二\n问题\n回放 A 在 game_loop=320 时，双方当前气量各是多少？是否相等？\n\n证据\n{\"records\":[{\"game_loop\":320,\"player_name\":\"Lambo\",\"tracker_index\":246,\"vespene_current\":0},{\"game_loop\":320,\"player_name\":\"MaxPax\",\"tracker_index\":247,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 和 MaxPax 的当前气量均为 0，两人相等。\n来源：tracker_index=246、247。\n\n问题\n回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\n\n证据\n{\"replay_id\": \"A\", \"records\": [{\"game_loop\": 160, \"player_name\": \"Lambo\", \"minerals_current\": 35, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 238}, {\"game_loop\": 160, \"player_name\": \"MaxPax\", \"minerals_current\": 40, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 239}], \"differences\": [{\"field\": \"minerals_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": -5}, {\"field\": \"vespene_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}, {\"field\": \"workers_active_count\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}], \"sample_ordinal\": 2}\n\n回答\n",
+        "max_new_tokens": 128
+      },
+      "http_status": 200,
+      "request_seconds": 1.292,
+      "response": {
+        "model_id": "Qwen/Qwen3-1.7B",
+        "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "device": "cuda:0",
+        "enable_thinking": false,
+        "max_new_tokens": 128,
+        "messages": [
+          {
+            "role": "user",
+            "content": "请根据提供的回放证据回答问题。\n\n- 先核对玩家、game_loop 和指标，再回答。game_loop 是游戏循环编号。\n- 比较时保持题目指定的玩家或时间顺序。证据提供差值时，直接使用该值及其正负方向。\n- 缺少所需记录或解释依据时，说明缺少什么。记录中的数值 0 是有效数据。\n- 用两行输出。第一行以“答案：”开头，给出结论。第二行以“来源：”开头，列出实际用到的 tracker_index。若提供的记录只支持说明资料不足，可注明它们的覆盖范围或指出缺少的记录。\n\n以下示例展示如何回答和标注来源。请使用最后一个问题对应的证据作答。\n\n示例一\n问题\n回放 A 在 game_loop=160 时，Lambo 的当前气量是多少？\n\n证据\n{\"records\":[{\"game_loop\":160,\"player_name\":\"Lambo\",\"tracker_index\":238,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 的当前气量为 0。\n来源：tracker_index=238。\n\n示例二\n问题\n回放 A 在 game_loop=320 时，双方当前气量各是多少？是否相等？\n\n证据\n{\"records\":[{\"game_loop\":320,\"player_name\":\"Lambo\",\"tracker_index\":246,\"vespene_current\":0},{\"game_loop\":320,\"player_name\":\"MaxPax\",\"tracker_index\":247,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 和 MaxPax 的当前气量均为 0，两人相等。\n来源：tracker_index=246、247。\n\n问题\n回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\n\n证据\n{\"replay_id\": \"A\", \"records\": [{\"game_loop\": 160, \"player_name\": \"Lambo\", \"minerals_current\": 35, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 238}, {\"game_loop\": 160, \"player_name\": \"MaxPax\", \"minerals_current\": 40, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 239}], \"differences\": [{\"field\": \"minerals_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": -5}, {\"field\": \"vespene_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}, {\"field\": \"workers_active_count\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}], \"sample_ordinal\": 2}\n\n回答\n"
+          }
+        ],
+        "rendered_prompt": "<|im_start|>user\n请根据提供的回放证据回答问题。\n\n- 先核对玩家、game_loop 和指标，再回答。game_loop 是游戏循环编号。\n- 比较时保持题目指定的玩家或时间顺序。证据提供差值时，直接使用该值及其正负方向。\n- 缺少所需记录或解释依据时，说明缺少什么。记录中的数值 0 是有效数据。\n- 用两行输出。第一行以“答案：”开头，给出结论。第二行以“来源：”开头，列出实际用到的 tracker_index。若提供的记录只支持说明资料不足，可注明它们的覆盖范围或指出缺少的记录。\n\n以下示例展示如何回答和标注来源。请使用最后一个问题对应的证据作答。\n\n示例一\n问题\n回放 A 在 game_loop=160 时，Lambo 的当前气量是多少？\n\n证据\n{\"records\":[{\"game_loop\":160,\"player_name\":\"Lambo\",\"tracker_index\":238,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 的当前气量为 0。\n来源：tracker_index=238。\n\n示例二\n问题\n回放 A 在 game_loop=320 时，双方当前气量各是多少？是否相等？\n\n证据\n{\"records\":[{\"game_loop\":320,\"player_name\":\"Lambo\",\"tracker_index\":246,\"vespene_current\":0},{\"game_loop\":320,\"player_name\":\"MaxPax\",\"tracker_index\":247,\"vespene_current\":0}],\"differences\":[]}\n\n回答\n答案：Lambo 和 MaxPax 的当前气量均为 0，两人相等。\n来源：tracker_index=246、247。\n\n问题\n回放 A 的第二个采样点，双方当前矿量分别是多少？请给出 Lambo 减 MaxPax 的差值。\n\n证据\n{\"replay_id\": \"A\", \"records\": [{\"game_loop\": 160, \"player_name\": \"Lambo\", \"minerals_current\": 35, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 238}, {\"game_loop\": 160, \"player_name\": \"MaxPax\", \"minerals_current\": 40, \"vespene_current\": 0, \"workers_active_count\": 12, \"source_file\": \"2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay\", \"source_sha256\": \"30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19\", \"tracker_index\": 239}], \"differences\": [{\"field\": \"minerals_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": -5}, {\"field\": \"vespene_current\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}, {\"field\": \"workers_active_count\", \"game_loop\": 160, \"minuend_tracker_index\": 238, \"subtrahend_tracker_index\": 239, \"value\": 0}], \"sample_ordinal\": 2}\n\n回答\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+        "answer": "答案：Lambo 的当前矿量比 MaxPax 少 5。\n来源：tracker_index=238、239。",
+        "input_tokens": 910,
+        "generated_tokens": 32,
+        "stopped_on_eos": true,
+        "generation_seconds": 1.269
+      }
+    }
+  ],
+  "request": {
+    "tool": "get_replay_info",
+    "arguments": {
+      "replay_id": "A"
+    }
+  },
+  "attempts": [
+    {
+      "raw_answer": "{\"tool\":\"get_replay_info\",\"arguments\":{\"replay_id\":\"A\"}}",
+      "request": {
+        "tool": "get_replay_info",
+        "arguments": {
+          "replay_id": "A"
+        }
+      },
+      "error": null
+    }
+  ],
+  "tool_result": {
+    "replay_id": "A",
+    "game_loop": 160,
+    "players": [
+      {
+        "pid": 1,
+        "player_name": "Lambo",
+        "stats": {
+          "minerals_current": 35,
+          "vespene_current": 0,
+          "workers_active_count": 12
+        },
+        "field_status": {
+          "minerals_current": "raw_matches_parser",
+          "vespene_current": "raw_matches_parser",
+          "workers_active_count": "raw_matches_parser"
+        },
+        "source": {
+          "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+          "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+          "tracker_index": 238
+        }
+      },
+      {
+        "pid": 2,
+        "player_name": "MaxPax",
+        "stats": {
+          "minerals_current": 40,
+          "vespene_current": 0,
+          "workers_active_count": 12
+        },
+        "field_status": {
+          "minerals_current": "raw_matches_parser",
+          "vespene_current": "raw_matches_parser",
+          "workers_active_count": "raw_matches_parser"
+        },
+        "source": {
+          "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+          "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+          "tracker_index": 239
+        }
+      }
+    ],
+    "difference": {
+      "minuend_player": "Lambo",
+      "subtrahend_player": "MaxPax",
+      "values": {
+        "minerals_current": -5,
+        "vespene_current": 0,
+        "workers_active_count": 0
+      }
+    },
+    "sample_ordinal": 2
+  },
+  "tool_calls": [
+    {
+      "tool": "get_replay_info",
+      "arguments": {
+        "replay_id": "A"
+      },
+      "result": {
+        "replay_id": "A",
+        "players": [
+          {
+            "pid": 1,
+            "name": "Lambo",
+            "race": "Zerg",
+            "is_human": true
+          },
+          {
+            "pid": 2,
+            "name": "MaxPax",
+            "race": "Protoss",
+            "is_human": true
+          }
+        ],
+        "available_game_loops": [
+          1,
+          160,
+          320
+        ]
+      }
+    },
+    {
+      "tool": "get_stats",
+      "arguments": {
+        "replay_id": "A",
+        "game_loop": 160
+      },
+      "result": {
+        "replay_id": "A",
+        "game_loop": 160,
+        "players": [
+          {
+            "pid": 1,
+            "player_name": "Lambo",
+            "stats": {
+              "minerals_current": 35,
+              "vespene_current": 0,
+              "workers_active_count": 12
+            },
+            "field_status": {
+              "minerals_current": "raw_matches_parser",
+              "vespene_current": "raw_matches_parser",
+              "workers_active_count": "raw_matches_parser"
+            },
+            "source": {
+              "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+              "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+              "tracker_index": 238
+            }
+          },
+          {
+            "pid": 2,
+            "player_name": "MaxPax",
+            "stats": {
+              "minerals_current": 40,
+              "vespene_current": 0,
+              "workers_active_count": 12
+            },
+            "field_status": {
+              "minerals_current": "raw_matches_parser",
+              "vespene_current": "raw_matches_parser",
+              "workers_active_count": "raw_matches_parser"
+            },
+            "source": {
+              "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+              "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+              "tracker_index": 239
+            }
+          }
+        ],
+        "difference": {
+          "minuend_player": "Lambo",
+          "subtrahend_player": "MaxPax",
+          "values": {
+            "minerals_current": -5,
+            "vespene_current": 0,
+            "workers_active_count": 0
+          }
+        }
+      }
+    }
+  ],
+  "status": "ok",
+  "answer": "答案：Lambo 的当前矿量比 MaxPax 少 5。\n来源：tracker_index=238、239。"
+}

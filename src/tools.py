@@ -41,6 +41,7 @@ def _load_replay(replay_id: str) -> tuple[dict, dict[int, dict[int, dict[str, st
     Returns:
         - replay (tuple[dict, dict]): 回放信息，以及按时间编号和玩家编号索引的统计行。
     """
+    # 先校验编号，再用编号拼接文件路径。这里的编号只能是 A 到 Z 的单个字母。
     if not isinstance(replay_id, str) or re.fullmatch(r"[A-Z]", replay_id) is None:
         raise ReplayQueryError("invalid_replay_id", "回放编号必须是单个大写字母。")
 
@@ -57,6 +58,7 @@ def _load_replay(replay_id: str) -> tuple[dict, dict[int, dict[int, dict[str, st
     names = {player["pid"]: player["name"] for player in players}
     if len(names) != 2:
         raise ReplayQueryError("invalid_data", f"回放 {replay_id} 的玩家编号重复。")
+    # 元数据列出了全部无冲突共同点，统计表只导出了其中一部分。
     common_frames = set(info["common_frames_after_conflict_filter"])
     by_frame = {}
     duplicate_frames = set()
@@ -64,12 +66,13 @@ def _load_replay(replay_id: str) -> tuple[dict, dict[int, dict[int, dict[str, st
         with stats_path.open(encoding="utf-8-sig", newline="") as stream:
             for row in csv.DictReader(stream):
                 frame, pid = int(row["game_loop"]), int(row["pid"])
+                # 对照文件名、校验值和真实玩家名，防止混用不同回放的统计数据。
                 if (
                     row["replay_id"] != replay_id or row["source_sha256"] != info["sha256"]
                     or row["source_file"] != info["source_file"] or names.get(pid) != row["player_name"]
                 ):
                     raise ReplayQueryError("invalid_data", f"回放 {replay_id} 的统计行与元数据不一致。")
-                # 只保留双方各有一条可信记录的共同采样点，排除掉双方都没有可信记录的时刻。
+                # 先排除元数据中不属于无冲突共同点的时刻。
                 if frame not in common_frames:
                     continue
                 # 取出 frame 对应的记录字典；如果这个帧第一次出现，就先创建一个空字典，再取出来
@@ -83,7 +86,7 @@ def _load_replay(replay_id: str) -> tuple[dict, dict[int, dict[int, dict[str, st
         raise ReplayQueryError("invalid_data", f"回放 {replay_id} 缺少已导出的统计表。") from error
 
     info["players"] = players  # 按玩家编号升序排序，方便后续计算差值
-    # 过滤掉双方各有一条可信记录的时刻，保留可查询的共同采样点
+    # 只保留统计表中双方各有一条记录的时刻，按编号升序供查询和序号定位使用。
     available = {
         frame: records for frame, records in sorted(by_frame.items())
         if records.keys() == names.keys() and frame not in duplicate_frames
@@ -116,6 +119,7 @@ def get_stats(replay_id: str, game_loop: int) -> dict:
     Returns:
         - result (dict): 回放编号、时间编号、双方统计值及状态、来源和玩家 1 减玩家 2 的差值。
     """
+    # bool 是 int 的子类，严格类型检查避免把 True 当作时刻 1。
     if type(game_loop) is not int or game_loop < 0:
         raise ReplayQueryError("invalid_game_loop", "game_loop 必须是非负整数。")
     info, available = _load_replay(replay_id)
@@ -131,7 +135,7 @@ def get_stats(replay_id: str, game_loop: int) -> dict:
         statuses = {field: row[f"{field}_status"] for field in STAT_FIELDS}
         values = {}
         for field, status in statuses.items():
-            # 保留有效的零值，将缺失或不可用字段映射为 None。
+            # CSV 中的 "0" 是有效数据。只有通过字段校验且非空的值才转换为整数。
             values[field] = int(row[field]) if status == "raw_matches_parser" and row[field] else None
         players.append({
             "pid": player["pid"],
@@ -145,6 +149,7 @@ def get_stats(replay_id: str, game_loop: int) -> dict:
             },
         })
 
+    # players 已按编号排序，因此始终按玩家 1 减玩家 2。缺失值不参与相减。
     first, second = players
     differences = {}
     for field in STAT_FIELDS:
