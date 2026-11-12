@@ -1,0 +1,86 @@
+{
+  "replay_id": "C",
+  "source_file": "2026-10-18 - (Z)Hulk VS (P)UpK.SC2Replay",
+  "sha256": "08C9B11ECF76B542FCDED837F18711EA97A5A02C4790BE0F10A83BD62B04B338",
+  "source_url": "https://lotv.spawningtool.com/91274/",
+  "download_date_as_recorded": "2026-11-12",
+  "game_version": "5.0.17.98310",
+  "parser_version": "1.9.0",
+  "map_name": "Washout LE",
+  "real_type": "1v1",
+  "total_game_loops": 2988,
+  "players": [
+    {
+      "pid": 1,
+      "name": "Hulk",
+      "race": "Zerg",
+      "is_human": true
+    },
+    {
+      "pid": 2,
+      "name": "UpK",
+      "race": "Protoss",
+      "is_human": true
+    }
+  ],
+  "common_frames_after_conflict_filter": [
+    1,
+    160,
+    320,
+    480,
+    640,
+    800,
+    960,
+    1120,
+    1280,
+    1440,
+    1600,
+    1760,
+    1920,
+    2080,
+    2240,
+    2400,
+    2560,
+    2720,
+    2880,
+    2988
+  ],
+  "selected_frames": [
+    1,
+    160,
+    320,
+    480,
+    640,
+    800,
+    960,
+    1120,
+    1280,
+    1440,
+    1600,
+    1760,
+    1920,
+    2080,
+    2240,
+    2400,
+    2560,
+    2720,
+    2880,
+    2988
+  ],
+  "conflict_keys": [],
+  "duplicate_groups": [
+    {
+      "pid": 2,
+      "game_loop": 2988,
+      "tracker_indices": [
+        388,
+        389
+      ],
+      "conflict": false
+    }
+  ],
+  "field_status_counts_all_events": {
+    "raw_matches_parser": 123
+  },
+  "note": "共同点已排除冲突；每字段仍须检查状态。"
+}
