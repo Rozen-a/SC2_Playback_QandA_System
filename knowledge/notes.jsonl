@@ -1,0 +1,20 @@
+{"id":"K01","title":"当前矿量","text":"minerals_current 表示玩家在该采样点当前可用的矿量。字段检查会对照已解码的原始统计键 0 与解析器的 minerals_current 属性。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K02","title":"当前气量","text":"vespene_current 表示玩家在该采样点当前可用的气量。字段检查会对照已解码的原始统计键 1 与解析器的 vespene_current 属性。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K03","title":"活跃工人数","text":"workers_active_count 表示玩家在该采样点的活跃工人数。字段检查使用原始统计键 4。该字段不能直接解释为正在采矿的工人数。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K04","title":"玩家编号与玩家名","text":"pid 是统计事件对应的玩家编号，可在回放的玩家列表中定位。player_name 来自解析得到的玩家名。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K05","title":"游戏循环编号","text":"game_loop 是从统计事件的 frame 保存的时间编号。本项目保留该编号用于查询，不能把它直接当作比赛秒数。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K06","title":"Tracker 事件序号","text":"tracker_index 是事件在本回放完整 Tracker 事件列表中的位置，从 0 开始。它用于回查同一份回放的事件，在不同回放中可能重复。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K07","title":"回放文件来源标识","text":"source_file 记录原始回放文件名，source_sha256 记录该文件实际计算的 SHA-256。两者用于确认统计记录来自哪份回放文件。","source":{"path":"docs/fields.md","section":"字段对应"}}
+{"id":"K08","title":"原始统计字典与 JSON 键","text":"事件 JSON 中的 raw_stats 是已解码的统计字典。JSON 对象的键是字符串，可用键 \"0\"、\"1\"、\"4\" 分别核对矿量、气量和活跃工人数。","source":{"path":"docs/fields.md","section":"输出与复核"}}
+{"id":"K09","title":"重复统计事件","text":"同一个玩家在同一时刻出现多条统计事件时，若完整原始统计内容相同，查询只使用第一条。检查材料保留所有事件及其序号。","source":{"path":"docs/fields.md","section":"时间、重复与冲突"}}
+{"id":"K10","title":"冲突统计事件","text":"同一个玩家在同一时刻的多条事件，若完整原始统计内容不同，该玩家与时刻的组合标记为冲突，排除出可查询数据。","source":{"path":"docs/fields.md","section":"时间、重复与冲突"}}
+{"id":"K11","title":"共同采样点","text":"共同采样点是双方各自排除冲突后时间编号的交集，按编号升序排列。双方都有统计事件时，个别统计字段仍可能缺失或不可用。","source":{"path":"docs/fields.md","section":"时间、重复与冲突"}}
+{"id":"K12","title":"缺失值与有效零值","text":"查询工具将缺失或不可用的统计值表示为 None，序列化为 JSON 时为 null。统计记录中的有效零值保留为 0。","source":{"path":"docs/replay_tools.md","section":"T04 回放查询工具"}}
+{"id":"K13","title":"无效原始值与解析不一致","text":"原始值为负数或非整数时标为 invalid_raw。原始值为非负整数但与解析值不一致时标为 parser_mismatch。这两种状态对应的整理值都留空。","source":{"path":"docs/fields.md","section":"缺失、异常和解析器改写"}}
+{"id":"K14","title":"原始值与解析值核对","text":"sc2reader 1.9.0 会把目标统计字段的负数限制为零。项目比较原始值和解析值，在 field_checks 中记录 parser_changed。只有原始值为非负整数且与解析值一致时才保留该值。","source":{"path":"docs/fields.md","section":"缺失、异常和解析器改写"}}
+{"id":"K15","title":"查询回放信息","text":"get_replay_info 接收回放编号 replay_id，返回玩家信息以及升序排列的可查询时刻 available_game_loops。玩家列表按玩家编号排序。","source":{"path":"docs/replay_tools.md","section":"T04 回放查询工具"}}
+{"id":"K16","title":"查询指定时刻的统计","text":"get_stats 接收回放编号 replay_id 和非负整数 game_loop，返回该时刻双方的三项统计、字段状态、差值和来源。","source":{"path":"docs/replay_tools.md","section":"T04 回放查询工具"}}
+{"id":"K17","title":"可查询时刻与不可查询时刻","text":"可查询时刻必须出现在元数据的无冲突共同点和实际导出的统计表中，且双方各有一条记录。请求其他时刻会返回可选时刻列表。","source":{"path":"docs/replay_tools.md","section":"T04 回放查询工具"}}
+{"id":"K18","title":"按序号定位采样点","text":"问题中的第几个采样点按可查询时刻的升序列表定位。程序先读取列表，再把对应的实际游戏循环编号交给统计工具。","source":{"path":"docs/replay_tools.md","section":"真实模型联调"}}
+{"id":"K19","title":"差值方向与缺失值","text":"三项差值均按玩家 1 的值减去玩家 2 的值，并保留正负号。任一方的该项不可用时，对应差值为 null。","source":{"path":"docs/replay_tools.md","section":"T04 回放查询工具"}}
+{"id":"K20","title":"工具请求校验与修正","text":"模型的工具请求包含 tool 和 arguments。程序检查工具名、字段和参数类型，再调用查询工具验证回放及时间是否可查。格式和查询参数错误共用一次修正机会。","source":{"path":"docs/replay_tools.md","section":"模型工具请求"}}

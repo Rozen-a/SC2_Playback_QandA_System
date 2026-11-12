@@ -1,0 +1,10 @@
+{
+  "model_id": "BAAI/bge-small-zh-v1.5",
+  "revision": "7999e1d3359715c523056ef9478215996d62a620",
+  "model_path": "../model_assets/bge-small-zh-v1.5/7999e1d3359715c523056ef9478215996d62a620",
+  "device": "cpu",
+  "notes_path": "knowledge/notes.jsonl",
+  "index_path": "knowledge/notes_index.npz",
+  "query_prefix": "为这个句子生成表示以用于检索相关文章：",
+  "top_k": 3
+}

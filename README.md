@@ -46,6 +46,8 @@ SC2_Playback_QandA_System/
 ├── eval/
 │   ├── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 │   └── holdout_A.jsonl            # T03 选型后的复核题
+├── knowledge/
+│   └── notes.jsonl                # T05 检索用说明及其来源
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
@@ -419,6 +421,12 @@ python -m venv .venv
 2026-11-12 已导出回放 A 的全部 89 个无冲突共同采样点，共 178 条记录。查询工具返回相同的可查列表，原有六条记录和来源校验值均一致。[A 扩充检查报告](results/T04/A_data_check.md)
 
 回放 B、C 也已按相同方式完成导出，将命令中的回放编号改为 `B` 或 `C` 即可复现。B 导出 79 个共同采样点、158 条记录，用于调试与对照。C 导出 20 个共同采样点、40 条记录，在 T04 用于文件与解析兼容性检查。[B 检查报告](results/T04/B_data_check.md) · [C 检查报告](results/T04/C_data_check.md)
+
+### T05 回放说明检索
+
+[说明资料库](knowledge/notes.jsonl) 已整理 20 条短文，覆盖统计字段、采样时刻、重复与冲突、缺失值、差值方向和工具调用规则。每行是一条 UTF-8 JSON 记录，包含 `id`（编号）、`title`（标题）、`text`（正文）和 `source`（原文路径 `path`、小节标题 `section`）。
+
+资料来自 [统计字段说明](docs/fields.md) 和 [回放查询工具说明](docs/replay_tools.md)。具体对局数值由 T04 查询工具提供。下一步用说明资料建立向量索引。
 
 > ## 数据来源与官方资料
 >
