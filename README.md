@@ -31,7 +31,8 @@ T04 已在回放 A 上跑通真实查询问答。首条联调的查询结果正�
 SC2_Playback_QandA_System/
 ├── configs/
 │   ├── example.json              # 配置读取示例
-│   └── model.json                # 模型版本、位置和生成设置
+│   ├── model.json                # 回答模型版本、位置和生成设置
+│   └── retrieval.json            # T05 向量模型和检索设置
 ├── data/
 │   ├── raw/                      # 原始 .SC2Replay 文件
 │   ├── decoded/
@@ -46,6 +47,8 @@ SC2_Playback_QandA_System/
 ├── eval/
 │   ├── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 │   └── holdout_A.jsonl            # T03 选型后的复核题
+├── knowledge/
+│   └── notes.jsonl                # T05 检索用说明及其来源
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
@@ -57,6 +60,8 @@ SC2_Playback_QandA_System/
 │   ├── T01/                      # 检查报告、人工复核与运行记录
 │   └── T02/                      # 模型实际推理记录
 ├── src/
+│   ├── build_index.py            # T05 说明向量索引构建
+│   ├── retrieval.py              # T05 说明片段检索
 │   ├── tools.py                  # T04 回放信息与统计查询
 │   ├── evaluation/
 │   │   └── run_prompt_comparison.py # T03 三版提示批量推理
@@ -419,6 +424,26 @@ python -m venv .venv
 2026-11-12 已导出回放 A 的全部 89 个无冲突共同采样点，共 178 条记录。查询工具返回相同的可查列表，原有六条记录和来源校验值均一致。[A 扩充检查报告](results/T04/A_data_check.md)
 
 回放 B、C 也已按相同方式完成导出，将命令中的回放编号改为 `B` 或 `C` 即可复现。B 导出 79 个共同采样点、158 条记录，用于调试与对照。C 导出 20 个共同采样点、40 条记录，在 T04 用于文件与解析兼容性检查。[B 检查报告](results/T04/B_data_check.md) · [C 检查报告](results/T04/C_data_check.md)
+
+### T05 回放说明检索
+
+[说明资料库](knowledge/notes.jsonl) 已整理 20 条短文，覆盖统计字段、采样时刻、重复与冲突、缺失值、差值方向和工具调用规则。每行是一条 UTF-8 JSON 记录，包含 `id`（编号）、`title`（标题）、`text`（正文）和 `source`（原文路径 `path`、小节标题 `section`）。
+
+资料来自 [统计字段说明](docs/fields.md) 和 [回放查询工具说明](docs/replay_tools.md)。具体对局数值由 T04 查询工具提供。
+
+#### 建立索引并检索
+
+在仓库根目录运行以下命令。项目环境已有 NumPy，需安装 Sentence Transformers。模型在 CPU 上运行，权重保存到仓库外的 `model_assets`，下载命令使用配置中的固定提交版本。[BAAI 模型说明](https://huggingface.co/BAAI/bge-small-zh-v1.5)
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install "sentence-transformers==6.3.0"
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -X utf8 -c "import json; from pathlib import Path; from huggingface_hub import snapshot_download; c=json.loads(Path('configs/retrieval.json').read_text(encoding='utf-8')); print(snapshot_download(repo_id=c['model_id'], revision=c['revision'], local_dir=c['model_path'], allow_patterns=['*.json','1_Pooling/config.json','model.safetensors','vocab.txt']))"
+.\.venv\Scripts\python.exe -X utf8 -m src.build_index
+.\.venv\Scripts\python.exe -X utf8 -m src.retrieval --query "活跃工人数是什么意思？" --query "统计差值按谁减谁？" --query "《星际争霸 II》的配乐由谁创作？"
+```
+
+构建脚本生成 `knowledge/notes_index.npz`，保存向量、资料编号、原文 SHA-256 和模型版本。资料或模型版本变动后重新构建即可。检索命令显示每个问题排名靠前的说明，并将编号、正文、来源和相似度保存到 `results/T05/retrieval_<UTC时间>.json`。相似度用于排序，是否足以回答仍需核对正文。此阶段无需启动 T02 服务。
 
 > ## 数据来源与官方资料
 >
