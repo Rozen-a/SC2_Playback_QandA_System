@@ -49,6 +49,8 @@ SC2_Playback_QandA_System/
 │   └── holdout_A.jsonl            # T03 选型后的复核题
 ├── knowledge/
 │   └── notes.jsonl                # T05 检索用说明及其来源
+├── knowledge/
+│   └── notes.jsonl                # T05 检索用说明及其来源
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
