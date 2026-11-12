@@ -1,24 +1,64 @@
-"""T01 回放解析入口，核对来源并导出统计事件、样本和检查报告。"""
+"""
+读取清单中的 1v1 回放，核对来源并按指定范围导出统计数据。
+"""
 
+import argparse
 from pathlib import Path
 from importlib.metadata import version
 from collections import defaultdict
 import csv
 import hashlib
 import json
+import re
 import sc2reader
 from sc2reader.events.tracker import PlayerStatsEvent
 from stats_validation import STAT_FIELDS, check_stat
 from report_generator import write_t01_report
 
 project_root = Path(__file__).resolve().parents[2]
-replay_path = project_root / r"data\raw\2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay"
+parser = argparse.ArgumentParser(description=__doc__.strip())
+parser.add_argument("--replay-id", default="A", help="data/manifest.csv 中的回放编号，默认 A")
+# 两种范围只允许选一种，避免同时传入时无法判断按哪个范围导出。
+export_range = parser.add_mutually_exclusive_group()
+export_range.add_argument("--sample-count", type=int, help="导出前 N 个共同采样点，默认 3")
+export_range.add_argument("--all-frames", action="store_true", help="导出全部无冲突共同采样点")
+args = parser.parse_args()
+replay_id = args.replay_id
+# 不指定范围时沿用 T01 的前三个共同采样点。编号格式与 T04 查询工具一致。
+sample_count = 3 if args.sample_count is None else args.sample_count
+if re.fullmatch(r"[A-Z]", replay_id) is None:
+    parser.error("--replay-id 必须是单个大写英文字母。")
+if sample_count < 1:
+    parser.error("--sample-count 必须大于 0。")
+
+# 以回放编号查找唯一清单记录，解析前核对文件身份及解析器版本。
+manifest_path = project_root / "data/manifest.csv"
+with manifest_path.open("r", encoding="utf-8-sig", newline="") as file:
+    matches = [row for row in csv.DictReader(file) if row["replay_id"] == replay_id]
+if len(matches) != 1:
+    parser.error(f"来源清单中必须有且只有一条回放 {replay_id} 的记录。")
+manifest_record = matches[0]
+# 清单只登记文件名。解析实际路径后再检查它仍位于 data/raw 下。
+filename = Path(manifest_record["filename"])
+if filename.name != str(filename) or filename.suffix.lower() != ".sc2replay":
+    parser.error("清单 filename 必须是单独的 .SC2Replay 文件名。")
+raw_dir = (project_root / "data/raw").resolve()
+replay_path = (raw_dir / filename).resolve()
+if replay_path.parent != raw_dir or not replay_path.is_file():
+    parser.error(f"在 data/raw 中找不到回放文件：{filename}")
+# 文件名相同也可能是不同的回放，使用文件内容的 SHA-256 确认身份。
+replay_sha256 = hashlib.sha256(replay_path.read_bytes()).hexdigest().upper()
+if manifest_record["sha256"].upper() != replay_sha256:
+    parser.error("当前回放 SHA-256 与 data/manifest.csv 不匹配，请核实文件及来源清单。")
+parser_version = version("sc2reader")
+if manifest_record["parser_version"] != parser_version:
+    parser.error("来源清单中的解析器版本与当前环境不同，请先核实。")
 
 # 检查基本配置
 print("\n","="*50)
 print("基本配置检查")
 print("-"*50)
-print("sc2reader 版本：", version("sc2reader"))
+print("sc2reader 版本：", parser_version)
 print("回放文件路径：", replay_path)
 
 print("\n","="*50)
@@ -26,6 +66,9 @@ print("回放信息概览")
 print("-"*50)
 # 加载回放，不加载地图文件
 replay = sc2reader.load_replay(str(replay_path), load_map=False)
+# 游戏版本来自实际解码结果，解码后才能与清单核对。
+if manifest_record["game_version"] != replay.release_string:
+    parser.error("来源清单中的游戏版本与当前回放不同，请先核实。")
 
 print("游戏版本：", replay.release_string)
 print("地图名称：", replay.map_name)
@@ -128,35 +171,20 @@ print("冲突的玩家与时间组合数量：", len(conflict_keys))
 print("无冲突共同采样点数量：", len(common_frames))
 print("前 10 个共同采样点：", common_frames[:10])
 
-if len(common_frames) < 3:
-    raise ValueError("不足三个无冲突共同采样点，需要进一步检查。")
+# 范围不足时在写入产物前报错，避免导出比请求更少的时点。
+if not common_frames:
+    parser.error("没有无冲突共同采样点，无法导出。")
+if not args.all_frames and len(common_frames) < sample_count:
+    parser.error(f"要求导出 {sample_count} 个采样点，但实际只有 {len(common_frames)} 个。")
 
-selected_frames = common_frames[:3]
-print("本次准备核对的三个采样点：", selected_frames)
+# 列表已按时间编号升序排列，因此切片会保留最早的 N 个无冲突共同点。
+selected_frames = common_frames if args.all_frames else common_frames[:sample_count]
+print("本次导出的共同采样点数量：", len(selected_frames))
+print("本次导出的前 10 个采样点：", selected_frames[:10])
 
 print("\n", "=" * 50)
 print("统计字段检查与导出")
 print("-" * 50)
-
-# 用当前文件的校验值检查来源清单，避免误用同名的旧文件。
-replay_sha256 = hashlib.sha256(replay_path.read_bytes()).hexdigest().upper()
-manifest_path = project_root / "data/manifest.csv"
-with manifest_path.open("r", encoding="utf-8-sig", newline="") as file:
-    manifest_rows = list(csv.DictReader(file)) # 使用表头作为键，把每一行读成字典，并将所有行收集成列表
-matches = [row for row in manifest_rows if row["filename"] == replay_path.name]
-if len(matches) != 1:
-    raise ValueError("来源清单中必须有且只有一条对应当前文件名的记录。")
-manifest_record = matches[0]
-if manifest_record["sha256"].upper() != replay_sha256:
-    raise ValueError("当前回放 SHA-256 与 data/manifest.csv 不匹配，请核实文件及来源清单。")
-if manifest_record["parser_version"] != version("sc2reader"):
-    raise ValueError("来源清单中的解析器版本与当前环境不同，请先核实。")
-if manifest_record["game_version"] != replay.release_string:
-    raise ValueError("来源清单中的游戏版本与当前回放不同，请先核实。")
-replay_id = manifest_record["replay_id"]
-# replay_id 将用于导出文件名，只允许简单编号，避免误生成到其他目录。
-if not replay_id or not all(char.isascii() and (char.isalnum() or char in "_-") for char in replay_id):
-    raise ValueError("回放编号只能包含英文字母、数字、下划线和短横线。")
 
 # 创建字典，将玩家编号映射到玩家对象
 players = {player.pid: player for player in replay.players}
@@ -188,7 +216,7 @@ for tracker_index, event in enumerate(replay.tracker_events):
     decoded_records.append(record)
     decoded_by_index[tracker_index] = record
 
-# 将三个采样点的双方记录整理成六行，保留事件序号以便回查。
+# 每个选中时刻导出双方各一行，保留原始事件序号以便回查。
 sample_rows = []
 for frame in selected_frames:
     for pid in player_ids:
@@ -216,7 +244,11 @@ for frame in selected_frames:
 # 创建导出目录，确保存在
 processed_dir = project_root / "data/processed"
 decoded_dir = project_root / "data/decoded"
-results_dir = project_root / "results/T01"
+# 统计 CSV 和 JSON 仍按回放编号写到原有位置，供查询工具读取。
+# A 的默认范围沿用 T01 报告路径。扩充范围或其他回放使用各自的 T04 报告。
+legacy_report = replay_id == "A" and not args.all_frames and sample_count == 3
+results_dir = project_root / ("results/T01" if legacy_report else "results/T04")
+report_filename = "data_check.md" if legacy_report else f"{replay_id}_data_check.md"
 for directory in (processed_dir, decoded_dir, results_dir):
     directory.mkdir(parents=True, exist_ok=True)
 
@@ -228,7 +260,7 @@ source = {
     "source_url": manifest_record["source_url"],
     "download_date_as_recorded": manifest_record["download_date"],
     "game_version": replay.release_string,
-    "parser_version": version("sc2reader"),
+    "parser_version": parser_version,
 }
 info = {
     **source,
@@ -250,7 +282,8 @@ info = {
         for key, records in grouped_events.items() if len(records) > 1
     ],
     "field_status_counts_all_events": dict(quality_counts),
-    "note": "共同点已排除冲突；每字段仍须检查状态。人工复核结果另见 results/T01/manual_review.md。",
+    "note": "共同点已排除冲突；每字段仍须检查状态。"
+    + ("前三个采样点的人工复核见 results/T01/manual_review.md。" if replay_id == "A" else ""),
 }
 
 sample_path = processed_dir / f"{replay_id}_stats_sample.csv"
@@ -270,14 +303,17 @@ raw_path.write_text(json.dumps({
     "events": decoded_records,
 }, ensure_ascii=False, indent=2), encoding="utf-8")
 
-# 报告排版与写入由独立模块负责，解析程序只传递已经检查过的数据。
+# 报告模块只负责排版。A 的报告可引用 T01 人工复核表，链接路径随报告所在目录调整。
 report_path = write_t01_report(
     info=info,
     sample_rows=sample_rows,
     stats_event_count=len(decoded_records),
     output_dir=results_dir,
+    report_filename=report_filename,
+    manual_review_link="manual_review.md" if legacy_report else "../T01/manual_review.md" if replay_id == "A" else None,
 )
 print("全部统计事件的字段检查计数：", dict(quality_counts))
 for path in (sample_path, info_path, raw_path, report_path):
     print("已导出：", path.relative_to(project_root))
-print("人工复核记录：results/T01/manual_review.md（本次运行不会覆盖）。")
+if replay_id == "A":
+    print("前三个采样点人工复核记录：results/T01/manual_review.md（本次运行不会覆盖）。")

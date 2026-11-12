@@ -1,4 +1,6 @@
-"""核对 T01 已导出的 CSV 样本、事件 JSON 和原始回放文件。"""
+"""
+核对已导出的 CSV、回放元数据、事件 JSON 和原始回放文件。
+"""
 import csv
 import hashlib
 import json
@@ -7,10 +9,14 @@ from pathlib import Path
 
 
 class ExportRecordTests(unittest.TestCase):
-    """检查六条样本能否追溯到当前回放的对应统计事件。"""
+    """
+    检查所有导出行能否追溯到当前回放中的对应统计事件。
+    """
 
     def test_sample_matches_raw_evidence(self):
-        """核对样本数量、来源校验值、事件身份和各统计字段。"""
+        """
+        核对导出覆盖范围、来源校验值、事件身份和统计字段。
+        """
         root = Path(__file__).resolve().parents[1]
         raw_path = root / "data/decoded/A_tracker_stats.json"
         # 本用例读取现有导出产物。尚未生成原始事件 JSON 时，提示先运行解析程序。
@@ -21,9 +27,15 @@ class ExportRecordTests(unittest.TestCase):
             encoding="utf-8-sig", newline=""
         ) as file:
             rows = list(csv.DictReader(file))
-        # 三个共同采样时刻各有双方记录。同一玩家和时刻的组合只能出现一次。
-        self.assertEqual(len(rows), 6)
-        self.assertEqual(len({(r["pid"], r["game_loop"]) for r in rows}), 6)
+        info = json.loads((root / "data/processed/A_info.json").read_text(encoding="utf-8"))
+        frames = info["selected_frames"]
+        # 两种导出模式都选取升序共同点的前缀，全部导出时前缀就是完整列表。
+        self.assertTrue(frames)
+        self.assertEqual(frames, info["common_frames_after_conflict_filter"][:len(frames)])
+        # 每个选中时刻必须恰好包含双方各一条记录，适用于默认样本和扩充导出。
+        expected = {(player["pid"], frame) for player in info["players"] for frame in frames}
+        self.assertEqual(len(rows), len(expected))
+        self.assertEqual({(int(r["pid"]), int(r["game_loop"])) for r in rows}, expected)
         # 用当前文件的实际字节重算 SHA-256，核实导出记录中的来源。
         source_path = root / "data/raw" / raw["source"]["source_file"]
         self.assertEqual(
@@ -33,6 +45,8 @@ class ExportRecordTests(unittest.TestCase):
         # tracker_index 是原始 Tracker 事件序号，用它定位事件，避免依赖 JSON 中的排列位置。
         events = {event["tracker_index"]: event for event in raw["events"]}
         for row in rows:
+            # 逐行核对来源，防止扩充时误混入其他文件的统计记录。
+            self.assertEqual(row["source_sha256"], raw["source"]["sha256"])
             event = events[int(row["tracker_index"])]
             self.assertEqual(event["pid"], int(row["pid"]))
             self.assertEqual(event["game_loop"], int(row["game_loop"]))

@@ -18,7 +18,7 @@ T04 已在回放 A 上跑通真实查询问答。首条联调的查询结果正�
 - 使用 `sc2reader` 读取回放基本信息、玩家信息和玩家统计事件。
 - 检查双方共同采样点、重复记录和数据冲突。
 - 核对矿、气、活跃工人数的原始统计值与解析值，区分缺失、异常与解析差异。
-- 导出六条样本记录、比赛信息、完整统计核对材料和 Markdown 检查报告。
+- 按回放编号和采样范围导出统计记录、比赛信息、统计核对材料和 Markdown 检查报告。
 - 在 GPU 上加载本地 Qwen3-1.7B，使用模型对话模板生成短回答并记录运行结果。
 - 启动本机模型服务，查看模型状态，通过 HTTP 请求取得真实生成结果。
 - 从独立 Python 客户端调用模型服务，展示回答、耗时并记录调用结果。
@@ -38,7 +38,7 @@ SC2_Playback_QandA_System/
 │   │   └── A_tracker_stats.json   # 已解码统计字典与字段检查结果
 │   ├── processed/
 │   │   ├── A_info.json            # 比赛信息与采样点摘要
-│   │   └── A_stats_sample.csv     # 六条统计样本
+│   │   └── A_stats_sample.csv     # 回放 A 的已导出统计
 │   └── manifest.csv              # 回放来源、校验值与版本清单
 ├── docs/
 │   ├── fields.md                 # 字段定义及异常处理规则
@@ -114,13 +114,15 @@ python -m venv --system-site-packages .venv
 
 模型推理实际验证环境为 `torch==2.10.0+cu128`，对应 CUDA 12.8。依赖清单中的 `torch==2.10.0` 同样接受该版本，但不单独保证 CUDA 构建。新电脑需先安装匹配其显卡驱动的 GPU 版 PyTorch，并确认 `torch.cuda.is_available()` 为 `True`。
 
-### 3. 检查回放文件
+### 3. 示例回放来源
 
-当前解析脚本使用以下固定文件：
+三份示例回放放在 `data/raw/`，文件名、来源、用途、SHA-256 和版本记录在 [回放清单](data/manifest.csv)。解析脚本默认读取 A，也可按编号选择回放。
 
-```text
-data/raw/2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay
-```
+| 编号 | 本地文件名 | 用途 | 来源 |
+| --- | --- | --- | --- |
+| A | `2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay` | 开发与训练 | [Spawning Tool · Lambo vs MaxPax](https://lotv.spawningtool.com/91277/) |
+| B | `2026-10-25 - (P)DnS VS (T)Spirit.SC2Replay` | 调试与对照 | [Spawning Tool · DnS vs Spirit](https://lotv.spawningtool.com/91333/) |
+| C | `2026-10-18 - (Z)Hulk VS (P)UpK.SC2Replay` | T04 文件与解析兼容性检查 | [Spawning Tool · Hulk vs UpK](https://lotv.spawningtool.com/91274/) |
 
 请确认该文件存在，并与 [来源清单](data/manifest.csv) 中的文件名、SHA-256 和版本信息对应。仅重命名其他回放不能替代这一检查；如需更换回放，应同步修改脚本中的 `replay_path` 和来源清单。
 
@@ -142,7 +144,7 @@ data/raw/2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay
 
 | 输出 | 内容 |
 | --- | --- |
-| [统计样本](data/processed/A_stats_sample.csv) | 前三个无冲突共同采样点、双方共六条记录 |
+| [统计样本](data/processed/A_stats_sample.csv) | 回放 A 已导出的共同采样点，每个时刻双方各一条 |
 | [比赛摘要](data/processed/A_info.json) | 来源、玩家、共同采样点、重复与冲突信息 |
 | [统计核对材料](data/decoded/A_tracker_stats.json) | 全部玩家统计事件及字段检查结果 |
 | [数据检查报告](results/T01/data_check.md) | 检查摘要与六条样本表格 |
@@ -212,14 +214,14 @@ python -m venv .venv
 
 执行后生成：
 
-- `data/processed/A_stats_sample.csv`：三个共同采样点、双方共六条记录。
+- `data/processed/A_stats_sample.csv`：默认导出三个共同采样点、双方共六条记录。扩充后的范围见 T04。
 - `data/processed/A_info.json`：比赛、玩家、共同采样点及重复冲突摘要。
 - `data/decoded/A_tracker_stats.json`：全部原始统计字典及字段检查结果。
 - `results/T01/data_check.md`：数据检查报告。
 
 以上输出会在重新运行时更新。`results/T01/manual_review.md` 是独立人工记录，程序不会覆盖；对应原始文件变化后，需要重新复核。
 
-字段含义、缺失与异常处理见 `docs/fields.md`。当前只取前三个无冲突共同采样点；采样点存在不代表所有字段都可用，字段异常时 CSV 留空。
+字段含义、缺失与异常处理见 `docs/fields.md)。默认取前三个无冲突共同采样点。采样点存在不代表所有字段都可用，字段异常时 CSV 留空。
 
 运行字段边界检查测试：
 
@@ -386,7 +388,7 @@ python -m venv .venv
 
 ### T04 回放查询工具
 
-`get_replay_info` 返回玩家信息和实际可查的共同采样点。`get_stats` 返回指定时刻的双方统计、玩家 1 减玩家 2 的差值以及来源。当前回放 A 可查 `1`、`160` 和 `320`。[工具参数与返回值](docs/replay_tools.md)
+`get_replay_info` 返回玩家信息和实际可查的共同采样点。`get_stats` 返回指定时刻的双方统计、玩家 1 减玩家 2 的差值以及来源。扩充后回放 A 可查 89 个时点，前三个为 `1`、`160` 和 `320`。[工具参数与返回值](docs/replay_tools.md)
 
 在仓库根目录运行查询工具测试。
 
@@ -403,6 +405,18 @@ python -m venv .venv
 ```
 
 2026-11-12 联调中，模型首次请求 `get_replay_info` 就通过校验，程序定位第二个采样点 `160` 并执行 `get_stats`。工具返回 Lambo 35、MaxPax 40 和差值 `-5`。最终回答正确表达了差值，引用了 Tracker 序号 238、239，但未报告两人的具体矿量。[本次联调记录](results/T04/tool_qa_20261112T061205628917Z.json)
+
+#### 扩充回放统计导出
+
+解析脚本通过 `--replay-id` 从来源清单定位回放。使用 `--sample-count N` 导出前 N 个共同采样点，或使用 `--all-frames` 导出全部无冲突共同采样点。在仓库根目录执行以下命令扩充 A 的统计。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 .\src\replay\parse_replay.py --replay-id A --all-frames
+```
+
+命令会更新 A 的统计 CSV、元数据和事件 JSON，并生成 `results/T04/A_data_check.md`。原有 T01 报告和人工复核记录继续保留，人工复核只覆盖最初的三个时点。扩充后运行无参数的旧命令会将统计范围恢复到前三个时点。
+
+2026-11-12 已导出回放 A 的全部 89 个无冲突共同采样点，共 178 条记录。查询工具返回相同的可查列表，原有六条记录和来源校验值均一致。[A 扩充检查报告](results/T04/A_data_check.md)
 
 > ## 数据来源与官方资料
 >
