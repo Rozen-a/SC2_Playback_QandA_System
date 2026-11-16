@@ -122,6 +122,21 @@ class NoteRetriever:
         return [{**self.notes[i], "score": float(scores[i])} for i in order]
 
 
+def display_matches(question: str, matches: list[dict]) -> None:
+    """
+    显示候选说明正文、排序分数与原文位置。
+
+    Args:
+        - question (str): 本次检索的问题。
+        - matches (list[dict]): 已按相似度排序的候选说明。
+    """
+    print(f"\n问题：{question}", flush=True)
+    for match in matches:
+        source = match["source"]
+        print(f"- {match['id']} {match['title']}，相似度 {match['score']:.4f}", flush=True)
+        print(f"  {match['text']}（{source['path']} · {source['section']}）", flush=True)
+
+
 def main() -> int:
     """
     读取命令行问题，显示检索结果并保存核对记录。
@@ -147,11 +162,7 @@ def main() -> int:
         return 1
 
     for result in results:
-        print(f"\n问题：{result['question']}")
-        for match in result["matches"]:
-            source = match["source"]
-            print(f"- {match['id']} {match['title']}，相似度 {match['score']:.4f}")
-            print(f"  {match['text']}（{source['path']} · {source['section']}）")
+        display_matches(result["question"], result["matches"])
     print(f"\n运行记录：{output}")
     return 0
 

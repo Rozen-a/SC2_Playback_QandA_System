@@ -49,8 +49,6 @@ SC2_Playback_QandA_System/
 │   └── holdout_A.jsonl            # T03 选型后的复核题
 ├── knowledge/
 │   └── notes.jsonl                # T05 检索用说明及其来源
-├── knowledge/
-│   └── notes.jsonl                # T05 检索用说明及其来源
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
@@ -448,6 +446,8 @@ python -m venv .venv
 构建脚本生成 `knowledge/notes_index.npz`，保存向量、资料编号、原文 SHA-256 和模型版本。资料或模型版本变动后重新构建即可。检索命令显示每个问题排名靠前的说明，并将编号、正文、来源和相似度保存到 `results/T05/retrieval_<UTC时间>.json`。相似度用于排序，是否足以回答仍需核对正文。此阶段无需启动 T02 服务。
 
 2026-11-12 本机索引包含 20 条 512 维向量。活跃工人数和差值方向两题的首位片段均能支持答案。配乐作者一题返回了候选片段，但其中没有作者信息。[本次检索记录](results/T05/retrieval_20261112T094507025208Z.json)
+
+已在本机从说明原文独立重建索引，终端输出 `Index rebuild verified: (20, 512)`。[T05 核对记录](results/T05/rag_qa_review.md)
 
 > ## 数据来源与官方资料
 >
