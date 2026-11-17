@@ -69,6 +69,26 @@ def build_answer_prompt(question: str, tool_result: dict) -> str:
     return ANSWER_PLACEHOLDER.sub(lambda match: values[match[1]], template)
 
 
+def read_explicit_target(question: str) -> tuple[str | None, int | None, int | None]:
+    """
+    从问题中读取明确指定的回放编号、采样点序号和游戏循环编号。
+
+    Args:
+        - question (str): 用户原始问题。
+
+    Returns:
+        - target (tuple): 回放编号、采样点序号、游戏循环编号，未识别的项为 None。
+    """
+    ordinal_match = ORDINAL_PATTERN.search(question)
+    ordinal = None
+    if ordinal_match:
+        value = ordinal_match[1]
+        ordinal = int(value) if value.isascii() else "一二三四五六七八九十".index(value) + 1
+    replay_match = REPLAY_PATTERN.search(question)
+    frame_match = FRAME_PATTERN.search(question)
+    return replay_match[1] if replay_match else None, ordinal, int(frame_match[1]) if frame_match else None
+
+
 def run_tool_qa(question: str, generate: Callable[[str], str]) -> dict:
     """
     请求工具、校验并查询，再根据查询结果生成回答。
@@ -80,14 +100,7 @@ def run_tool_qa(question: str, generate: Callable[[str], str]) -> dict:
     Returns:
         - result (dict): 状态、请求尝试、实际查询及结果、最终回答或失败原因。
     """
-    ordinal_match = ORDINAL_PATTERN.search(question)  # 识别问题中明确的采样点序号
-    ordinal = None
-    if ordinal_match:
-        value = ordinal_match[1]  # 匹配的数字或中文序号
-        # 中文序号用字符串的 .index() 方法查找 value 第一次出现的位置，位置从 0 开始计数
-        ordinal = int(value) if value.isascii() else "一二三四五六七八九十".index(value) + 1
-    replay_match = REPLAY_PATTERN.search(question)  # 识别问题中明确的回放编号
-    frame_match = FRAME_PATTERN.search(question)  # 识别问题中明确的 game_loop
+    explicit_replay, ordinal, explicit_frame = read_explicit_target(question)
     calls = []  # 记录实际调用的工具名、参数和返回结果，供上层检查或调试
 
     def execute(request: dict) -> dict:
@@ -104,10 +117,10 @@ def run_tool_qa(question: str, generate: Callable[[str], str]) -> dict:
         arguments = request["arguments"]
         replay_id = arguments["replay_id"]
         # JSON 合法也可能指向另一局或另一时刻。检查问题中能直接识别的限制。
-        if replay_match and replay_id != replay_match[1]:
-            raise ReplayQueryError("wrong_replay", f"请使用用户指定的回放 {replay_match[1]}。")
-        if frame_match and (tool != "get_stats" or arguments["game_loop"] != int(frame_match[1])):
-            raise ReplayQueryError("wrong_game_loop", f"请查询用户指定的 game_loop={frame_match[1]}。")
+        if explicit_replay and replay_id != explicit_replay:
+            raise ReplayQueryError("wrong_replay", f"请使用用户指定的回放 {explicit_replay}。")
+        if explicit_frame is not None and (tool != "get_stats" or arguments["game_loop"] != explicit_frame):
+            raise ReplayQueryError("wrong_game_loop", f"请查询用户指定的 game_loop={explicit_frame}。")
         if ordinal is not None and tool != "get_replay_info":
             raise ReplayQueryError("info_required", "按第几个时刻查询时，请先调用 get_replay_info。")
 
