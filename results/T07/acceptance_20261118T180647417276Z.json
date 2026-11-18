@@ -1,0 +1,421 @@
+{
+  "checks": {
+    "initial_query": true,
+    "followup_queries": true,
+    "followup_values_and_sources": true,
+    "switch_clears_target": true,
+    "missing_time_clarifies": true,
+    "query_uses_b_source": true,
+    "new_session_isolated": true,
+    "trim_history": true,
+    "reject_oversized_question": true
+  },
+  "events": [
+    {
+      "operation": "查 A 的第二个采样点",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "Lambo",
+        "game_loop": 160,
+        "metric": "minerals_current",
+        "messages": []
+      },
+      "result": {
+        "game_loop": 160,
+        "player_name": "Lambo",
+        "value": 35,
+        "source": {
+          "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+          "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+          "tracker_index": 238
+        }
+      },
+      "stats_arguments": [
+        [
+          "A",
+          160
+        ]
+      ],
+      "info_arguments": [
+        [
+          "A"
+        ]
+      ]
+    },
+    {
+      "operation": "同一时刻的气呢？",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "Lambo",
+        "game_loop": 160,
+        "metric": "minerals_current",
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "Lambo",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "result": {
+        "status": "ok",
+        "replay_id": "A",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "records": [
+          {
+            "player_name": "Lambo",
+            "value": 0,
+            "source": {
+              "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+              "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+              "tracker_index": 238
+            }
+          }
+        ]
+      },
+      "stats_arguments": [
+        [
+          "A",
+          160
+        ]
+      ],
+      "info_arguments": []
+    },
+    {
+      "operation": "另一方呢？",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "Lambo",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "MaxPax",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "result": {
+        "status": "ok",
+        "replay_id": "A",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "records": [
+          {
+            "player_name": "MaxPax",
+            "value": 0,
+            "source": {
+              "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+              "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+              "tracker_index": 239
+            }
+          }
+        ]
+      },
+      "stats_arguments": [
+        [
+          "A",
+          160
+        ]
+      ],
+      "info_arguments": []
+    },
+    {
+      "operation": "下一个采样点呢？",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "MaxPax",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "MaxPax",
+        "game_loop": 320,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "result": {
+        "status": "ok",
+        "replay_id": "A",
+        "game_loop": 320,
+        "metric": "vespene_current",
+        "records": [
+          {
+            "player_name": "MaxPax",
+            "value": 0,
+            "source": {
+              "source_file": "2025-11-01- (Z)Lambo VS (P)MaxPax.SC2Replay",
+              "source_sha256": "30C9F28848B5B8DE0C78E58B8A8BCF24D3377690871AC5E67CDF05673B508F19",
+              "tracker_index": 247
+            }
+          }
+        ]
+      },
+      "stats_arguments": [
+        [
+          "A",
+          320
+        ]
+      ],
+      "info_arguments": [
+        [
+          "A"
+        ]
+      ]
+    },
+    {
+      "operation": "切换到 B",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "A",
+        "player_name": "MaxPax",
+        "game_loop": 320,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "result": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "stats_arguments": [],
+      "info_arguments": [
+        [
+          "B"
+        ]
+      ]
+    },
+    {
+      "operation": "换局后追问同一时刻的气",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "result": {
+        "status": "clarify",
+        "message": "请先明确回放和采样时刻。"
+      },
+      "stats_arguments": [],
+      "info_arguments": []
+    },
+    {
+      "operation": "明确 B 的第二个采样点",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": "DnS",
+        "game_loop": 160,
+        "metric": "minerals_current",
+        "messages": []
+      },
+      "result": {
+        "game_loop": 160,
+        "player_name": "DnS",
+        "value": 40,
+        "source": {
+          "source_file": "2026-10-25 - (P)DnS VS (T)Spirit.SC2Replay",
+          "source_sha256": "DF7C891AA01FE99ABC51E0DA5C9D5DF2EB40C7B3C92E6C3736956E65E8AA641A",
+          "tracker_index": 278
+        }
+      },
+      "stats_arguments": [
+        [
+          "B",
+          160
+        ]
+      ],
+      "info_arguments": [
+        [
+          "B"
+        ]
+      ]
+    },
+    {
+      "operation": "新会话追问另一方",
+      "session_id": "fd0653d84a1d417c914a885870d859ae",
+      "before": {
+        "session_id": "fd0653d84a1d417c914a885870d859ae",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "after": {
+        "session_id": "fd0653d84a1d417c914a885870d859ae",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": []
+      },
+      "result": {
+        "status": "clarify",
+        "message": "请先明确回放和采样时刻。"
+      },
+      "stats_arguments": [],
+      "info_arguments": []
+    },
+    {
+      "operation": "回到原会话追问气量",
+      "session_id": "7658916695ce46c28d51417108d8c3fe",
+      "before": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": "DnS",
+        "game_loop": 160,
+        "metric": "minerals_current",
+        "messages": []
+      },
+      "after": {
+        "session_id": "7658916695ce46c28d51417108d8c3fe",
+        "replay_id": "B",
+        "player_name": "DnS",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "messages": []
+      },
+      "result": {
+        "status": "ok",
+        "replay_id": "B",
+        "game_loop": 160,
+        "metric": "vespene_current",
+        "records": [
+          {
+            "player_name": "DnS",
+            "value": 0,
+            "source": {
+              "source_file": "2026-10-25 - (P)DnS VS (T)Spirit.SC2Replay",
+              "source_sha256": "DF7C891AA01FE99ABC51E0DA5C9D5DF2EB40C7B3C92E6C3736956E65E8AA641A",
+              "tracker_index": 278
+            }
+          }
+        ]
+      },
+      "stats_arguments": [
+        [
+          "B",
+          160
+        ]
+      ],
+      "info_arguments": []
+    }
+  ],
+  "long_input": {
+    "trim_history": {
+      "path": "results/T06/chain_20261118T180009510215Z.json",
+      "budget": {
+        "initial_input_characters": 5716,
+        "initial_input_tokens": 2833,
+        "fits": true,
+        "input_tokens": 772,
+        "context_limit": 40960,
+        "reserved_output_tokens": 128,
+        "input_characters": 1583,
+        "kept_history_indices": [
+          1
+        ],
+        "kept_optional_note_ids": [],
+        "removed": [
+          {
+            "type": "history",
+            "index": 0
+          }
+        ],
+        "kept_note_ids": [
+          "K01"
+        ],
+        "excluded_note_ids": [
+          "K02",
+          "K03"
+        ]
+      },
+      "generation_requests": 1,
+      "status": "ok"
+    },
+    "reject_oversized_question": {
+      "path": "results/T06/chain_20261118T180019420529Z.json",
+      "budget": {
+        "initial_input_characters": 5609,
+        "initial_input_tokens": 2785,
+        "fits": false,
+        "input_tokens": 2785,
+        "context_limit": 40960,
+        "reserved_output_tokens": 128,
+        "input_characters": 5609,
+        "kept_history_indices": [],
+        "kept_optional_note_ids": [],
+        "removed": [],
+        "kept_note_ids": [
+          "K01"
+        ],
+        "excluded_note_ids": [
+          "K02",
+          "K03"
+        ]
+      },
+      "generation_requests": 0,
+      "status": "error"
+    }
+  },
+  "status": "ok"
+}
