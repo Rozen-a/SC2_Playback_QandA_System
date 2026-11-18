@@ -13,16 +13,17 @@ from src.replay.tool_qa import read_explicit_target
 from src.retrieval import PROJECT_ROOT, NoteRetriever
 from src.tools import ReplayQueryError, get_replay_info, get_stats
 
-
+# T06 仅支持单一指标查询，且要求明确回放和采样点。METRICS 映射问题中中文或字段名到工具调用的参数名。
 METRICS = {"当前矿量": "minerals_current", "当前气量": "vespene_current", "活跃工人数": "workers_active_count"}
-PLACEHOLDER = re.compile(r"\{(question|evidence)\}")
+# 匹配 T03 模板中的占位符，避免替换示例 JSON 中的花括号。
+PLACEHOLDER = re.compile(r"\{(question|evidence)\}")  
 # T06 字段定义标签。资料 ID 来自说明库，完整候选保留在 notes 供排查。
 DEFINITION_METRICS = {"K01": "minerals_current", "K02": "vespene_current", "K03": "workers_active_count"}
 
 
 def take_parameters(state: dict) -> dict:
     """
-    提取首阶段支持的明确回放、时刻和单一指标。
+    取参：提取首阶段支持的明确回放、时刻和单一指标。
 
     Args:
         - state (dict): 包含原始问题的链状态。
@@ -32,7 +33,9 @@ def take_parameters(state: dict) -> dict:
     """
     question = state["question"]
     replay_id, ordinal, frame = read_explicit_target(question)
+    # 对每一项，检查问题中有没有中文名或英文字段名，只要命中其中一个，就把对应的中文名加入 metrics
     metrics = [name for name, field in METRICS.items() if name in question or field in question]
+    # 要求：明确指定回放、恰好一种时刻写法、恰好一个受支持的指标
     if replay_id is None or (ordinal is None) == (frame is None) or len(metrics) != 1:
         raise ReplayQueryError("invalid_target", "请明确指定回放、一个采样点序号或 game_loop，以及一个统计指标。")
     label = metrics[0]
@@ -42,7 +45,7 @@ def take_parameters(state: dict) -> dict:
 
 def query_stats(state: dict) -> dict:
     """
-    从可查时刻定位采样点，再执行原有查询工具。
+    查询：从可查时刻定位采样点，再执行原有查询工具。
 
     Args:
         - state (dict): 已校验的回放和采样点参数。
@@ -67,7 +70,7 @@ def query_stats(state: dict) -> dict:
 
 def assemble_answer(state: dict) -> dict:
     """
-    将两类证据填入 T03 回答模板。
+    组装：将两类证据填入 T03 回答模板。
 
     Args:
         - state (dict): 含问题、选中指标、查询结果和候选说明。
@@ -155,7 +158,7 @@ def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], d
 
     def retrieve(state: dict) -> dict:
         """
-        使用指标名称检索说明，避免对局编号干扰检索。
+        检索：使用指标名称检索说明，避免对局编号干扰检索。
 
         Args:
             - state (dict): 含指标名称的链状态。
@@ -168,7 +171,7 @@ def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], d
 
     def answer(state: dict) -> dict:
         """
-        发送一次最终回答请求并保留原始响应。
+        回答：发送一次最终回答请求并保留原始响应。
 
         Args:
             - state (dict): 含完整回答提示的链状态。
