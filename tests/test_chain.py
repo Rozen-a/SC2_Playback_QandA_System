@@ -6,14 +6,56 @@ from importlib.util import find_spec
 from unittest import TestCase, skipUnless
 from unittest.mock import Mock
 
-from src.chain import build_chain
+from src.chain import build_chain, session_chain_input
+from src.context import SessionStore
 
 
 @skipUnless(find_spec("langchain_core"), "请先安装 langchain-core")
 class ChainTests(TestCase):
     """
-使用回放 A 的真实统计与模拟检索、模型响应验证链路。
+    使用回放 A 的真实统计与模拟检索、模型响应验证链路。
     """
+
+    def test_session_history_is_trimmed_before_generation(self):
+        """
+        验证超长历史被裁剪，当轮证据和短历史仍进入一次生成。
+        """
+        store = SessionStore()
+        session = store.create()
+        store.append_message(session.session_id, "user", "旧" * 4100)
+        session = store.append_message(session.session_id, "assistant", "近期历史")
+        note = {"id": "K01", "title": "当前矿量", "text": "玩家当前可用的矿量。",
+                "source": {"path": "docs/fields.md", "section": "字段对应"}}
+        answer = "双方数值：Lambo 35，MaxPax 40\n字段含义：当前可用矿量\n数值来源：238、239\n说明来源：K01"
+        generate = Mock(return_value={"response": {"answer": answer}})
+        chain = build_chain(Mock(return_value=[note]), generate, budget=(len, 10000, 128))
+        result = chain.invoke(session_chain_input("回放 A 的第二个采样点，当前矿量是多少？", session))
+        audit = result["prompt_budget"]
+        self.assertEqual(result["status"], "ok")
+        self.assertGreater(audit["initial_input_characters"], 4000)
+        self.assertLessEqual(audit["input_characters"], 4000)
+        self.assertEqual(audit["removed"], [{"type": "history", "index": 0}])
+        self.assertEqual(audit["kept_history_indices"], [1])
+        self.assertEqual(result["evidence"]["notes"], [note])
+        self.assertIn("近期历史", result["answer_prompt"])
+        self.assertNotIn("旧" * 4100, result["answer_prompt"])
+        self.assertEqual(result["generation_requests"], 1)
+        generate.assert_called_once_with(result["answer_prompt"])
+
+    def test_oversized_required_question_stops_before_generation(self):
+        """
+        验证必要问题超过字符上限时保留原文和预算记录，且不调用模型。
+        """
+        generate = Mock()
+        session = SessionStore().create()
+        question = "回放 A 的第二个采样点，当前矿量是多少？" + "长" * 4100
+        chain = build_chain(Mock(return_value=[]), generate, budget=(len, 10000, 128))
+        result = chain.invoke(session_chain_input(question, session))
+        self.assertEqual(result["error"]["code"], "prompt_too_long")
+        self.assertFalse(result["prompt_budget"]["fits"])
+        self.assertIn(question, result["answer_prompt"])
+        self.assertEqual(result["generation_requests"], 0)
+        generate.assert_not_called()
 
     def test_mixed_evidence_reaches_one_generation(self):
         """

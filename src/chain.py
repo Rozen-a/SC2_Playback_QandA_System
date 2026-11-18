@@ -7,8 +7,11 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 import json
 import re
+from dataclasses import asdict
 
 from src.model.model_client import ModelClientError, request_answer
+from src.prompt_budget import fit_prompt
+from src.context import SessionState, SessionStore
 from src.replay.tool_qa import read_explicit_target
 from src.retrieval import PROJECT_ROOT, NoteRetriever
 from src.tools import ReplayQueryError, get_replay_info, get_stats
@@ -143,13 +146,29 @@ def check_answer_sources(text: str, evidence: dict) -> str | None:
     return None
 
 
-def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], dict]):
+def session_chain_input(question: str, session: SessionState) -> dict:
+    """
+    将同一会话的近期消息作为本轮可裁剪历史传入链。
+
+    Args:
+        question (str): 本轮完整问题。
+        session (SessionState): 当前会话的状态快照。
+
+    Returns:
+        dict: 原始问题、会话编号、按时间升序排列的最近消息和调用次数初值。
+    """
+    return {"question": question, "session_id": session.session_id,
+            "history": [asdict(message) for message in session.messages], "generation_requests": 0}
+
+
+def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], dict], *, budget=None):
     """
     构建会记录中间证据并在失败后停止业务处理的 Runnable 链。
 
     Args:
         - search (Callable): 接收指标说明问题，返回候选片段。
         - generate (Callable): 接收提示，返回 T02 服务结果。
+        - budget (tuple | None): 可选的分词计数函数、上下文上限和输出预留。
 
     Returns:
         - chain (Runnable): 接收初始状态并返回完整运行状态的五步链。
@@ -179,13 +198,39 @@ def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], d
         Returns:
             - fields (dict): 原始模型响应及运行状态。
         """
-        response = generate(state["answer_prompt"])
+        prompt = state["answer_prompt"]
+        fields = {}
+        if budget is not None:
+            count_tokens, context_limit, output_tokens = budget
+            # 组装阶段已排除无关候选。当前接入把适用说明与统计视为必要证据，
+            # 因此 render 始终返回原正文，可选资料传空；只允许裁剪调用方传入的历史。
+            prompt, _, audit = fit_prompt(
+                lambda _: state["answer_prompt"], count_tokens, state.get("history", ()),
+                (), context_limit, output_tokens,
+            )
+            # 区分已送入候选提示的资料与组装阶段排除的检索结果。
+            used = {note["id"] for note in state["evidence"]["notes"]}
+            audit["kept_note_ids"] = sorted(used)
+            audit["excluded_note_ids"] = [note["id"] for note in state["notes"] if note["id"] not in used]
+            fields = {"answer_prompt": prompt, "prompt_budget": audit}
+            if not audit["fits"]:
+                return {**fields, "status": "error", "error": {
+                    "stage": "answer", "code": "prompt_too_long",
+                    "message": "必要问题与证据超出输入预算，未调用模型。",
+                }}
+        fields["generation_requests"] = 1
+        try:
+            response = generate(prompt)
+        except ModelClientError as error:
+            return {**fields, "status": "error", "error": {
+                "stage": "answer", "code": error.kind, "message": str(error),
+            }}
         issue = check_answer_sources(response["response"]["answer"], state["evidence"])
         if issue:
             # 保存原回答供核对，区分服务调用成功与来源校验失败。
-            return {"response": response, "status": "error",
+            return {**fields, "response": response, "status": "error",
                     "error": {"stage": "answer", "code": "invalid_sources", "message": issue}}
-        return {"response": response, "status": "ok"}
+        return {**fields, "response": response, "status": "ok"}
 
     def step(name: str, operation: Callable[[dict], dict]):
         """
@@ -237,6 +282,8 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__.strip())
     parser.add_argument("--question", required=True)
+    parser.add_argument("--history", action="append", default=[],
+                        help="用于复验的旧用户消息，按时间顺序重复传入")
     args = parser.parse_args()
     try:
         config = json.loads((PROJECT_ROOT / "configs/model.json").read_text(encoding="utf-8"))
@@ -262,7 +309,27 @@ def main() -> int:
             return result
 
         retriever = NoteRetriever(retrieval)
-        result = build_chain(retriever.search, generate).invoke({"question": args.question})
+        # 预算计数只需本地分词器和模型配置，无需在客户端加载权重。
+        from transformers import AutoConfig, AutoTokenizer
+        from src.model.model_inference import encode_chat
+
+        model_path = (PROJECT_ROOT / config["model_path"]).resolve()
+        tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+        model_config = AutoConfig.from_pretrained(model_path, local_files_only=True)
+        # 和 T02 使用同一模板编码函数；模型位置上限需同时容纳输入和预留输出。
+        budget = (
+            lambda prompt: encode_chat(tokenizer, prompt, config["enable_thinking"])[2]["input_ids"].shape[1],
+            model_config.max_position_embeddings,
+            expected["max_new_tokens"],
+        )
+        # 本次命令创建临时会话，用旧消息复现长输入；程序退出后会话随进程结束。
+        store = SessionStore()
+        session = store.create()
+        for message in args.history:
+            session = store.append_message(session.session_id, "user", message)
+        result = build_chain(retriever.search, generate, budget=budget).invoke(
+            session_chain_input(args.question, session)
+        )
         run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         output = PROJECT_ROOT / "results/T06" / f"chain_{run_id}.json"
         output.parent.mkdir(parents=True, exist_ok=True)

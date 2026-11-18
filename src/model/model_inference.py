@@ -43,6 +43,26 @@ def load_local_model(config: dict):
     return tokenizer, model
 
 
+def encode_chat(tokenizer, prompt: str, enable_thinking: bool):
+    """按 T02 的聊天模板编码，不重复添加特殊 token。
+
+    Args:
+        tokenizer: 本地模型分词器。
+        prompt: 发送给生成服务的原始文本。
+        enable_thinking: 同生成服务一致的模板设置。
+
+    Returns:
+        tuple: 对话消息、渲染文本和 PyTorch 输入张量集合。
+    """
+    # 预算与生成复用同一个用户消息结构和模板参数，以统一计数口径。
+    messages = [{"role": "user", "content": prompt}]
+    rendered = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True, enable_thinking=enable_thinking
+    )
+    # 模板已经写入对话标记，分词时不再额外添加特殊 token。
+    return messages, rendered, tokenizer(rendered, return_tensors="pt", add_special_tokens=False)
+
+
 def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
     """按模型对话模板生成回答，并记录新增 token 数和生成耗时。
 
@@ -65,19 +85,7 @@ def generate_answer(tokenizer, model, prompt: str, config: dict) -> dict:
         raise ValueError("max_new_tokens 必须为 1～512 之间的整数。")
 
     set_seed(config["seed"])
-    messages = [{"role": "user", "content": prompt}]
-    # 思考模式由配置决定。对比实验应记录并统一这个设置。
-    rendered_prompt = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=config["enable_thinking"],
-    )
-    inputs = tokenizer(
-        rendered_prompt, 
-        return_tensors="pt",  # 返回 PyTorch 张量
-        add_special_tokens=False
-        )
+    messages, rendered_prompt, inputs = encode_chat(tokenizer, prompt, config["enable_thinking"])
     inputs = inputs.to(model.device)
     # 计算输入的 token 数量
     input_tokens = inputs["input_ids"].shape[1]  # [输入条数, 每条输入的 token 数]
