@@ -8,7 +8,7 @@ from src.chain import build_components, session_chain_input
 from src.context import SessionStore
 
 
-def build_graph(search: Callable, generate: Callable, *, budget=None):
+def build_graph(search: Callable, generate: Callable, *, budget=None, router=None):
     """
     编译混合问题状态图，发生错误时通过结束节点返回结果。
 
@@ -16,10 +16,15 @@ def build_graph(search: Callable, generate: Callable, *, budget=None):
         search (Callable): 真实或模拟的检索函数。
         generate (Callable): 真实或模拟的生成函数。
         budget (tuple | None): 分词计数函数、上下文上限和输出预留。
+        router (Callable | None): 原始模型的路线客户端，提供时启用三路线。
 
     Returns:
         CompiledStateGraph: 接收字典状态的可执行图。
     """
+    # 显式提供路由模型时启用 T08-02；未提供时保持 T08-01 的固定混合路径。
+    if router is not None:
+        from src.routing import build_routed_graph
+        return build_routed_graph(search, generate, router, budget=budget)
     from langgraph.graph import END, START, StateGraph
 
     components = build_components(search, generate, budget=budget)

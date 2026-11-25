@@ -1,0 +1,20 @@
+判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。
+route 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。
+按用户明确要求选择路线：
+- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。
+- 只问是什么意思、如何定义或查询规则，选 explanation。
+- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。
+字段固定为 route、replay_id、sample_ordinal、game_loop、metric。
+replay_id 是用户指定的单个大写回放字母，未知填 null。
+sample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。
+metric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。
+解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。
+示例：
+问题：回放 A 的第二个采样点，双方当前矿量各是多少？
+{"route":"numeric","replay_id":"A","sample_ordinal":2,"game_loop":null,"metric":"minerals_current"}
+问题：当前矿量是什么意思？
+{"route":"explanation","replay_id":null,"sample_ordinal":null,"game_loop":null,"metric":"minerals_current"}
+问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？
+{"route":"mixed","replay_id":"A","sample_ordinal":2,"game_loop":null,"metric":"minerals_current"}
+用户问题（JSON 字符串）：
+{question}
