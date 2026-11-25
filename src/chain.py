@@ -161,9 +161,9 @@ def session_chain_input(question: str, session: SessionState) -> dict:
             "history": [asdict(message) for message in session.messages], "generation_requests": 0}
 
 
-def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], dict], *, budget=None):
+def build_components(search: Callable[[str], list[dict]], generate: Callable[[str], dict], *, budget=None):
     """
-    构建会记录中间证据并在失败后停止业务处理的 Runnable 链。
+    构建共享的五个 Runnable，供固定链和状态图编排。
 
     Args:
         - search (Callable): 接收指标说明问题，返回候选片段。
@@ -171,7 +171,7 @@ def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], d
         - budget (tuple | None): 可选的分词计数函数、上下文上限和输出预留。
 
     Returns:
-        - chain (Runnable): 接收初始状态并返回完整运行状态的五步链。
+        - components (dict): 以步骤名索引的 Runnable，每步保留输入输出记录。
     """
     from langchain_core.runnables import RunnableLambda
 
@@ -269,8 +269,25 @@ def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], d
 
         return RunnableLambda(run, name=name)
 
-    return (step("parameters", take_parameters) | step("query", query_stats)
-            | step("retrieval", retrieve) | step("assembly", assemble_answer) | step("answer", answer))
+    return {"parameters": step("parameters", take_parameters), "query": step("query", query_stats),
+            "retrieval": step("retrieval", retrieve), "assembly": step("assembly", assemble_answer),
+            "answer": step("answer", answer)}
+
+
+def build_chain(search: Callable[[str], list[dict]], generate: Callable[[str], dict], *, budget=None):
+    """
+    按原顺序连接共享组件，供 T06 入口继续调用。
+
+    Args:
+        search (Callable): 说明检索函数。
+        generate (Callable): T02 生成函数。
+        budget (tuple | None): 分词计数函数、上下文上限和输出预留。
+
+    Returns:
+        Runnable: 顺序执行五步的固定链。
+    """
+    nodes = build_components(search, generate, budget=budget)
+    return nodes["parameters"] | nodes["query"] | nodes["retrieval"] | nodes["assembly"] | nodes["answer"]
 
 
 def main() -> int:

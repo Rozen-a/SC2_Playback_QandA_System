@@ -8,3 +8,4 @@ requests==2.34.2
 numpy==2.5.3
 sentence-transformers==6.3.0
 langchain-core==1.8.1
+langgraph==1.2.23

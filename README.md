@@ -6,11 +6,13 @@
 
 本项目围绕 SC2 游戏回放开展数据解析与整理，为后续回放问答和模型效果对比提供数据基础。项目按照任务书分阶段实现，并保存各阶段的代码、运行结果和核对记录。
 
-当前已完成 T00 环境与配置读取、T01 回放解析与统计导出，以及 T02 模型部署与调用的功能和运行验收。现有入口包括命令行脚本与本机 HTTP 服务；回放问答、模型训练与对比功能尚未实现。
+当前已完成 T00—T07 的环境准备、回放解析、模型服务、提示对比、查询与说明检索、固定混合问答流程，以及会话接口和输入预算验收。T08 已完成状态图节点结构及自动测试，三类路线和补条件恢复待实现。现有入口包括命令行脚本和本机 HTTP 模型服务。
 
 T03 已完成三版推理、模板选型和预留题复核。示例版作为后续提示基线，复核发现它仍会遗漏数值和证据不足的理由。
 
 T04 已在回放 A 上跑通真实查询问答。首条联调的查询结果正确，模型答对差值并列出来源，但遗漏了双方各自的矿量。
+
+T06 后续在 A、B 上验证了双方数值、字段解释和两类来源同时输出。T07 会话接口可处理限定追问、换局与新会话隔离；交互入口将在 T08 接入。
 
 ### 当前功能
 
@@ -22,8 +24,12 @@ T04 已在回放 A 上跑通真实查询问答。首条联调的查询结果正�
 - 在 GPU 上加载本地 Qwen3-1.7B，使用模型对话模板生成短回答并记录运行结果。
 - 启动本机模型服务，查看模型状态，通过 HTTP 请求取得真实生成结果。
 - 从独立 Python 客户端调用模型服务，展示回答、耗时并记录调用结果。
+- 用 BGE 检索说明片段，通过回答模型生成带资料引用的解释。
+- 用 LangChain Runnable 连接查询、检索和混合回答，保留逐步证据。
+- 按会话编号管理条件与有限历史，处理限定追问并重新取数。
+- 对聊天模板处理后的输入计算 token，裁剪旧历史，必要证据超限时停止生成。
 
-当前验证对象为回放 A（Lambo 对阵 MaxPax，游戏版本 `5.0.15.95299`）。时间字段保留为 `game_loop`，字段定义与处理规则见 [字段说明](docs/fields.md)。
+当前已解析回放 A、B、C，来源和用途见下方示例回放表。时间字段保留为 `game_loop`，字段定义与处理规则见 [字段说明](docs/fields.md)。
 
 ## 目录结构
 
@@ -36,30 +42,43 @@ SC2_Playback_QandA_System/
 ├── data/
 │   ├── raw/                      # 原始 .SC2Replay 文件
 │   ├── decoded/
-│   │   └── A_tracker_stats.json   # 已解码统计字典与字段检查结果
+│   │   └── {A,B,C}_tracker_stats.json # 三局的已解码统计字典与检查结果
 │   ├── processed/
-│   │   ├── A_info.json            # 比赛信息与采样点摘要
-│   │   └── A_stats_sample.csv     # 回放 A 的已导出统计
+│   │   ├── {A,B,C}_info.json      # 各局比赛信息与采样点摘要
+│   │   └── {A,B,C}_stats_sample.csv # 各局已导出的统计
 │   └── manifest.csv              # 回放来源、校验值与版本清单
 ├── docs/
 │   ├── fields.md                 # 字段定义及异常处理规则
-│   └── replay_tools.md           # T04 工具接口与错误说明
+│   ├── replay_tools.md           # T04 工具接口与错误说明
+│   └── flow.md                   # T08 状态图节点和字段
 ├── eval/
 │   ├── dev_A.jsonl                # T03 回放 A 开发题、输入证据与参考答案
 │   └── holdout_A.jsonl            # T03 选型后的复核题
 ├── knowledge/
-│   └── notes.jsonl                # T05 检索用说明及其来源
+│   ├── notes.jsonl               # T05 检索用说明及其来源
+│   └── notes_index.npz           # T05 向量、资料编号和版本
 ├── prompts/
 │   ├── answer.txt                # 初步选定的回答模板
 │   ├── direct.txt                # 直接提问
 │   ├── rules.txt                 # 加入回答规则和格式
 │   ├── examples.txt              # 在规则版基础上加入示例
-│   └── tool_request.txt          # T04 工具选择与请求格式
+│   ├── tool_request.txt          # T04 工具选择与请求格式
+│   └── retrieval_rules.txt       # T05 检索回答规则
 ├── results/
 │   ├── T00/                      # 环境练习与排错记录
 │   ├── T01/                      # 检查报告、人工复核与运行记录
-│   └── T02/                      # 模型实际推理记录
+│   ├── T02/                      # 模型实际推理记录
+│   ├── T03/                      # 提示对比与复核
+│   ├── T04/                      # 工具联调和扩充检查报告
+│   ├── T05/                      # 检索、回答与核对记录
+│   ├── T06/                      # 混合问答及长输入运行记录
+│   └── T07/                      # 会话验收汇总
 ├── src/
+│   ├── chain.py                  # T06 共享 Runnable 与固定链
+│   ├── context.py                # T07 会话存储与追问查询
+│   ├── prompt_budget.py          # T07 输入裁剪与预算记录
+│   ├── graph.py                  # T08 StateGraph 与会话调用接口
+│   ├── rag_qa.py                 # T05 检索后生成说明回答
 │   ├── build_index.py            # T05 说明向量索引构建
 │   ├── retrieval.py              # T05 说明片段检索
 │   ├── tools.py                  # T04 回放信息与统计查询
@@ -78,6 +97,11 @@ SC2_Playback_QandA_System/
 │       ├── model_service.py       # 本机 HTTP 模型服务
 │       └── model_client.py        # 独立 HTTP 客户端
 ├── tests/
+│   ├── test_chain.py             # 固定链与混合证据测试
+│   ├── test_context.py           # 会话隔离、追问与切换测试
+│   ├── test_prompt_budget.py     # 长度预算测试
+│   ├── test_graph.py             # 状态图路径测试
+│   ├── verify_context_acceptance.py # T07 真实查询与预算验收汇总
 │   ├── test_stats_validation.py   # T01 统计字段边界测试
 │   ├── test_export_records.py     # T01 导出结果与源数据对应检查
 │   ├── test_tools.py              # T04 查询工具测试
@@ -448,6 +472,63 @@ python -m venv .venv
 2026-11-12 本机索引包含 20 条 512 维向量。活跃工人数和差值方向两题的首位片段均能支持答案。配乐作者一题返回了候选片段，但其中没有作者信息。[本次检索记录](results/T05/retrieval_20261112T094507025208Z.json)
 
 已在本机从说明原文独立重建索引，终端输出 `Index rebuild verified: (20, 512)`。[T05 核对记录](results/T05/rag_qa_review.md)
+
+#### 先检索再回答
+
+启动 T02 服务后，在仓库根目录运行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.rag_qa --query "统计差值按谁减谁？"
+```
+
+终端先显示候选片段，再显示回答。原始响应和补全出处后的展示文本保存在 `results/T05/rag_qa_<UTC时间>.json`。资料不足时检查是否表达不确定、是否编造具体信息。[T05 核对记录](results/T05/rag_qa_review.md)
+
+### T06 固定混合问答
+
+`src/chain.py` 以五个共享 Runnable 依次完成明确参数提取、真实查询、说明检索、提示组装和回答。当前支持一个回放、一个明确时刻或采样点序号，以及矿量、气量、活跃工人数中的一个指标。
+
+启动 T02 服务后，在仓库根目录运行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m src.chain --question "回放 A 的第二个采样点，Lambo 和 MaxPax 的当前矿量各是多少？当前矿量是什么意思？"
+```
+
+记录位于 `results/T06/chain_<UTC时间>.json`，包含各步输入输出、查询证据、完整候选说明、实际提示和原始回答。字段定义按指标筛选，引用校验检查两类编号，解释是否有依据仍需核对正文。
+
+A、B 的矿量混合题和 A 的气量题已通过本机复测。[A 矿量](results/T06/chain_20261117T183157117344Z.json) · [B 矿量](results/T06/chain_20261117T183214389228Z.json) · [A 气量](results/T06/chain_20261117T183232882568Z.json)
+
+### T07 会话状态与输入预算
+
+`SessionStore` 在进程内按 `session_id` 保存条件和最近消息。限定追问通过 `query_followup` 重新查询数据。切换回放时清空旧玩家、时刻、指标及历史，新会话使用独立编号。会话交互入口尚待 T08 接入。
+
+输入预算同时检查 4,000 字符限制和聊天模板后的输入 token 加输出预留。先删除最早历史，必要问题与证据仍超限时返回 `prompt_too_long`，停止生成。命令行的 `--history` 参数可在单次运行中复现历史输入：
+
+```powershell
+$question = "回放 A 的第二个采样点，Lambo 和 MaxPax 的当前矿量各是多少？当前矿量是什么意思？"
+$longText = '长' * 4100
+.\.venv\Scripts\python.exe -X utf8 -m src.chain --question $question --history $longText --history "上一轮在讨论回放 A。"
+.\.venv\Scripts\python.exe -X utf8 -m src.chain --question ($question + $longText)
+```
+
+第二条问答命令预期拒绝生成并返回退出码 1。两项预算场景已通过真实运行。会话验收可单独执行，直接查询回放数据并核对已有长输入记录，无需启动 T02 服务：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -B -m tests.verify_context_acceptance
+```
+
+验收结果写入 `results/T07/acceptance_<UTC时间>.json`。[已通过的本机验收](results/T07/acceptance_20261118T180647417276Z.json)
+
+### T08 状态图节点
+
+`src/graph.py` 已用 LangGraph 连接共享 Runnable，支持完整混合题以及缺条件时返回澄清。调用接口为 `invoke_session(graph, store, session_id, question)`。三类路线、跨轮条件补全恢复和统一执行预算待实现。[节点与字段说明](docs/flow.md)
+
+验证环境使用基础 Python 的 `langchain-core==1.8.1` 和 `langgraph==1.2.23`，项目虚拟环境继承。可用完整自动测试验证节点结构，无需启动 T02 服务：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -B -m unittest discover -s tests -v
+```
+
+T08-01 已通过 39 项自动测试，无跳过，其中图测试使用模拟检索和生成。
 
 > ## 数据来源与官方资料
 >
