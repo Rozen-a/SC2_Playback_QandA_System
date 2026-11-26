@@ -59,7 +59,16 @@ def route_parameters(question: str, router: Callable[[str], dict]) -> dict:
             if (replay, ordinal, frame) != (explicit_replay, explicit_ordinal, explicit_frame):
                 raise ValueError("模型参数与用户明确提供的回放或时刻不一致。")
             if replay is None or (ordinal is None and frame is None) or metric is None:
-                return {**fields, **request, "status": "clarify", "message": "请明确回放、时刻和统计指标。"}
+                # 仅对合法且如实缺条件的请求逐项提示；非法 JSON 不走此恢复入口。
+                missing = []
+                if replay is None:
+                    missing.append("回放编号")
+                if ordinal is None and frame is None:
+                    missing.append("采样点序号或 game_loop")
+                if metric is None:
+                    missing.append("统计指标")
+                return {**fields, **request, "status": "clarify", "missing_fields": missing,
+                        "message": "请补充：" + "、".join(missing) + "。"}
         elif any(value is not None for value in (replay, ordinal, frame)):
             raise ValueError("解释路线的回放和时刻应为空。")
         # 用原问题中可识别的指标反查模型参数，防止 JSON 合法但查错字段。

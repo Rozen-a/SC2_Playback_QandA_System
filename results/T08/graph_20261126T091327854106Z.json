@@ -1,0 +1,327 @@
+{
+  "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+  "status": "clarify",
+  "turns": [
+    {
+      "question": "第二个采样点，双方当前矿量各是多少？",
+      "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+      "history": [],
+      "generation_requests": 0,
+      "route_prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n",
+      "route_response": {
+        "http_status": 200,
+        "request_seconds": 2.356,
+        "response": {
+          "model_id": "Qwen/Qwen3-1.7B",
+          "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "device": "cuda:0",
+          "enable_thinking": false,
+          "max_new_tokens": 128,
+          "messages": [
+            {
+              "role": "user",
+              "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n"
+            }
+          ],
+          "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+          "answer": "{\"route\":\"numeric\",\"replay_id\":\"null\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+          "input_tokens": 426,
+          "generated_tokens": 29,
+          "stopped_on_eos": true,
+          "generation_seconds": 2.156
+        }
+      },
+      "status": "error",
+      "error": {
+        "stage": "route",
+        "code": "invalid_route",
+        "message": "回放编号格式错误。"
+      },
+      "steps": [
+        {
+          "name": "route",
+          "input": {
+            "question": "第二个采样点，双方当前矿量各是多少？",
+            "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+            "history": [],
+            "generation_requests": 0
+          },
+          "output": {
+            "route_prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n",
+            "route_response": {
+              "http_status": 200,
+              "request_seconds": 2.356,
+              "response": {
+                "model_id": "Qwen/Qwen3-1.7B",
+                "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+                "device": "cuda:0",
+                "enable_thinking": false,
+                "max_new_tokens": 128,
+                "messages": [
+                  {
+                    "role": "user",
+                    "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n"
+                  }
+                ],
+                "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+                "answer": "{\"route\":\"numeric\",\"replay_id\":\"null\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+                "input_tokens": 426,
+                "generated_tokens": 29,
+                "stopped_on_eos": true,
+                "generation_seconds": 2.156
+              }
+            },
+            "status": "error",
+            "error": {
+              "stage": "route",
+              "code": "invalid_route",
+              "message": "回放编号格式错误。"
+            }
+          }
+        }
+      ],
+      "graph_nodes": [
+        "route",
+        "finish"
+      ],
+      "user_input": "第二个采样点，双方当前矿量各是多少？",
+      "session_before": {
+        "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": [],
+        "pending_question": null
+      },
+      "session_after": {
+        "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": [
+          {
+            "role": "user",
+            "content": "第二个采样点，双方当前矿量各是多少？"
+          },
+          {
+            "role": "assistant",
+            "content": "回放编号格式错误。"
+          }
+        ],
+        "pending_question": null
+      },
+      "model_calls": [
+        {
+          "prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n",
+          "result": {
+            "http_status": 200,
+            "request_seconds": 2.356,
+            "response": {
+              "model_id": "Qwen/Qwen3-1.7B",
+              "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+              "device": "cuda:0",
+              "enable_thinking": false,
+              "max_new_tokens": 128,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n"
+                }
+              ],
+              "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"第二个采样点，双方当前矿量各是多少？\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+              "answer": "{\"route\":\"numeric\",\"replay_id\":\"null\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+              "input_tokens": 426,
+              "generated_tokens": 29,
+              "stopped_on_eos": true,
+              "generation_seconds": 2.156
+            }
+          }
+        }
+      ]
+    },
+    {
+      "question": "回放 A",
+      "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+      "history": [
+        {
+          "role": "user",
+          "content": "第二个采样点，双方当前矿量各是多少？"
+        },
+        {
+          "role": "assistant",
+          "content": "回放编号格式错误。"
+        }
+      ],
+      "generation_requests": 0,
+      "route_prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n",
+      "route_response": {
+        "http_status": 200,
+        "request_seconds": 0.984,
+        "response": {
+          "model_id": "Qwen/Qwen3-1.7B",
+          "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "device": "cuda:0",
+          "enable_thinking": false,
+          "max_new_tokens": 128,
+          "messages": [
+            {
+              "role": "user",
+              "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n"
+            }
+          ],
+          "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+          "answer": "{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+          "input_tokens": 417,
+          "generated_tokens": 29,
+          "stopped_on_eos": true,
+          "generation_seconds": 0.979
+        }
+      },
+      "route": "numeric",
+      "replay_id": "A",
+      "sample_ordinal": null,
+      "game_loop": null,
+      "metric": "minerals_current",
+      "status": "clarify",
+      "missing_fields": [
+        "采样点序号或 game_loop"
+      ],
+      "message": "请补充：采样点序号或 game_loop。",
+      "steps": [
+        {
+          "name": "route",
+          "input": {
+            "question": "回放 A",
+            "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+            "history": [
+              {
+                "role": "user",
+                "content": "第二个采样点，双方当前矿量各是多少？"
+              },
+              {
+                "role": "assistant",
+                "content": "回放编号格式错误。"
+              }
+            ],
+            "generation_requests": 0
+          },
+          "output": {
+            "route_prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n",
+            "route_response": {
+              "http_status": 200,
+              "request_seconds": 0.984,
+              "response": {
+                "model_id": "Qwen/Qwen3-1.7B",
+                "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+                "device": "cuda:0",
+                "enable_thinking": false,
+                "max_new_tokens": 128,
+                "messages": [
+                  {
+                    "role": "user",
+                    "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n"
+                  }
+                ],
+                "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+                "answer": "{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+                "input_tokens": 417,
+                "generated_tokens": 29,
+                "stopped_on_eos": true,
+                "generation_seconds": 0.979
+              }
+            },
+            "route": "numeric",
+            "replay_id": "A",
+            "sample_ordinal": null,
+            "game_loop": null,
+            "metric": "minerals_current",
+            "status": "clarify",
+            "missing_fields": [
+              "采样点序号或 game_loop"
+            ],
+            "message": "请补充：采样点序号或 game_loop。"
+          }
+        }
+      ],
+      "graph_nodes": [
+        "route",
+        "finish"
+      ],
+      "user_input": "回放 A",
+      "session_before": {
+        "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": [
+          {
+            "role": "user",
+            "content": "第二个采样点，双方当前矿量各是多少？"
+          },
+          {
+            "role": "assistant",
+            "content": "回放编号格式错误。"
+          }
+        ],
+        "pending_question": null
+      },
+      "session_after": {
+        "session_id": "1623d2022f4f47cfa852bf99d6432cc6",
+        "replay_id": null,
+        "player_name": null,
+        "game_loop": null,
+        "metric": null,
+        "messages": [
+          {
+            "role": "user",
+            "content": "第二个采样点，双方当前矿量各是多少？"
+          },
+          {
+            "role": "assistant",
+            "content": "回放编号格式错误。"
+          },
+          {
+            "role": "user",
+            "content": "回放 A"
+          },
+          {
+            "role": "assistant",
+            "content": "请补充：采样点序号或 game_loop。"
+          }
+        ],
+        "pending_question": "回放 A"
+      },
+      "model_calls": [
+        {
+          "prompt": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n",
+          "result": {
+            "http_status": 200,
+            "request_seconds": 0.984,
+            "response": {
+              "model_id": "Qwen/Qwen3-1.7B",
+              "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+              "device": "cuda:0",
+              "enable_thinking": false,
+              "max_new_tokens": 128,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n"
+                }
+              ],
+              "rendered_prompt": "<|im_start|>user\n判断问题路线并输出单个 JSON 对象，不加解释或代码围栏。\nroute 只能为 numeric（仅查比赛数字）、explanation（仅解释字段或规则）、mixed（同时查数字和解释）。\n按用户明确要求选择路线：\n- 只问多少、谁更多、相差多少，选 numeric。问题出现矿量、气量等字段名，并不表示用户要求解释。\n- 只问是什么意思、如何定义或查询规则，选 explanation。\n- 同时要求具体比赛数字和字段含义或规则解释，才选 mixed。不要自动增加用户没问的解释需求。\n字段固定为 route、replay_id、sample_ordinal、game_loop、metric。\nreplay_id 是用户指定的单个大写回放字母，未知填 null。\nsample_ordinal 是第几个采样点，从 1 起算；game_loop 是明确的游戏循环编号。两者只填一个，未指定则均填 null。\nmetric 只能是 minerals_current、vespene_current、workers_active_count；无法确定填 null。\n解释题无需指定回放或时刻，三个条件均填 null。不要补造用户未提供的条件。\n示例：\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？\n{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：当前矿量是什么意思？\n{\"route\":\"explanation\",\"replay_id\":null,\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}\n问题：回放 A 的第二个采样点，双方当前矿量各是多少？当前矿量是什么意思？\n{\"route\":\"mixed\",\"replay_id\":\"A\",\"sample_ordinal\":2,\"game_loop\":null,\"metric\":\"minerals_current\"}\n用户问题（JSON 字符串）：\n\"回放 A\"\n<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+              "answer": "{\"route\":\"numeric\",\"replay_id\":\"A\",\"sample_ordinal\":null,\"game_loop\":null,\"metric\":\"minerals_current\"}",
+              "input_tokens": 417,
+              "generated_tokens": 29,
+              "stopped_on_eos": true,
+              "generation_seconds": 0.979
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -37,6 +37,7 @@ class SessionState:
         game_loop (int | None): 已确认的采样时刻。
         metric (str | None): 已确认的统计指标。
         messages (tuple[Message, ...]): 按追加顺序保存的最近消息。
+        pending_question (str | None): 等待补充条件的问题及已有补充内容。
 
     查询条件为 None 表示尚未确定；空元组表示尚无消息。
     """
@@ -47,6 +48,7 @@ class SessionState:
     game_loop: int | None = None
     metric: str | None = None
     messages: tuple[Message, ...] = ()
+    pending_question: str | None = None
 
 
 class SessionStore:
@@ -143,6 +145,21 @@ class SessionStore:
         # 先确认目标可查询，再替换状态。校验失败时保留原会话。
         get_replay_info(replay_id)
         updated = SessionState(session_id=session_id, replay_id=replay_id)
+        self._sessions[session_id] = updated
+        return updated
+
+    def set_pending(self, session_id: str, question: str | None) -> SessionState:
+        """
+        保存需要补条件的原问题，传 None 时取消。
+
+        Args:
+            session_id (str): 当前会话编号。
+            question (str | None): 待处理问题及已收到的补充文本。
+
+        Returns:
+            SessionState: 更新后的会话快照。
+        """
+        updated = replace(self.get(session_id), pending_question=question)
         self._sessions[session_id] = updated
         return updated
 

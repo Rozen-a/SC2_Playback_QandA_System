@@ -27,7 +27,7 @@ def main() -> int:
     """
     # 使用模块说明作为命令行帮助；不提供问题时 argparse 会直接报错退出。
     parser = argparse.ArgumentParser(description=__doc__.strip())
-    parser.add_argument("--question", required=True)
+    parser.add_argument("--question", required=True, action="append", help="按顺序重复传入同一会话的多轮输入")
     args = parser.parse_args()
     # 模型配置提供服务地址和生成设置，检索配置用于初始化已有说明检索器。
     config = json.loads((PROJECT_ROOT / "configs/model.json").read_text(encoding="utf-8"))
@@ -75,10 +75,18 @@ def main() -> int:
     store = SessionStore()
     # router 和 generate 目前注入同一个客户端：先判断路线，再生成回答。
     # 提供 router 才启用三路线；NoteRetriever.search 仅在经过 retrieval 时调用。
-    result = invoke_session(build_graph(NoteRetriever(retrieval).search, generate,
-                                        router=generate, budget=budget),
-                            store, store.create().session_id, args.question)
-    result["model_calls"] = calls
+    graph = build_graph(NoteRetriever(retrieval).search, generate, router=generate, budget=budget)
+    sid = store.create().session_id
+    turns = []
+    for question in args.question:
+        # 同一条命令的所有问题复用 sid；此轮调用记录从当前列表末尾开始截取。
+        start = len(calls)
+        turn = invoke_session(graph, store, sid, question)
+        turns.append({**turn, "model_calls": calls[start:]})
+    # 单题沿用原 JSON 结构，多轮增加 turns，保留每轮原始输入输出与独立调用记录。
+    result = turns[0] if len(turns) == 1 else {
+        "session_id": sid, "status": turns[-1]["status"], "turns": turns,
+    }
     # UTC 时间区分各轮；x 模式独占创建，同名文件存在时明确报错而不覆盖。
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     output = PROJECT_ROOT / "results/T08" / f"graph_{run_id}.json"
@@ -87,8 +95,10 @@ def main() -> int:
         json.dump(result, stream, ensure_ascii=False, indent=2)
     print(f"运行记录：{output}")
     # 优先显示最终回答；没有回答时显示澄清文字，否则显示结构化错误。
-    print(result.get("response", {}).get("response", {}).get("answer",
-          result.get("message", result.get("error"))))
+    for turn in turns:
+        print(f"输入：{turn.get('user_input', turn['question'])}")
+        print(turn.get("response", {}).get("response", {}).get("answer",
+              turn.get("message", turn.get("error"))))
     # 澄清也返回 1：表示当前问题尚未完成回答，不代表一定发生服务故障。
     return 0 if result.get("status") == "ok" else 1
 
